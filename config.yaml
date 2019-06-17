@@ -1,0 +1,9 @@
+config:
+  rsocket:
+    protocol: fanuc         #use Fanuc(KAREL) protocol
+    port: 3000
+    timeout: 0
+    delay: 100
+    update_frame_id: wrist_2_link   #updates this frame when no driver exists
+    source_frame_id: camera/master0
+    target_frame_id: solve0

@@ -1,0 +1,4 @@
+<launch>
+  <rosparam command="load" file="$(find rovi_industrial)/config.yaml" />
+  <node pkg="rovi_industrial" type="r_socket.js" name="" output="screen" />
+</launch>
