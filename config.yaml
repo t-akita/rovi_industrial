@@ -2,10 +2,11 @@ config:
   rsocket:
     protocol: fanuc         #use Fanuc(KAREL) protocol
     port: 3000
-    timeout: 0
     delay: 100
-#    update_frame_id: wrist_2_link   #updates this frame when no driver exists
+    socket_timeout: 0
+    capt_timeout: 5
+    solve_timeout: 10
+    recipe_timeout: 3
+    update_frame_id: wrist_2_link   #updates this frame when no driver exists
     source_frame_id: camera/master0
-    target_frame_id: solve0
-    waypoint_frame_id: camera/capture0
-
+    target_frame_id: camera/capture0/solve0

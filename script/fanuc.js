@@ -1,36 +1,26 @@
+#!/usr/bin/env node
+
 const ros=require('rosnodejs');
 const geometry_msgs=ros.require('geometry_msgs').msg;
+const parser=require('./rparser');
 const tflib=require('./tflib');
 let protocol={}
 
-function toCoords(str) {
-  // data format is assumed as '***(X,Y,Z,A,B,C)\n'.
-  const ary = str.replace(/\).*/g, ']').replace(/.*\(/, '[').replace(/E\+/g, 'E').replace(/\+/g, '');
-  let coords = [];
+protocol.decode=function(msg){
   try{
-    coords = JSON.parse('[' + ary + ']');
+    let euler=parser.parse(msg);
+    return euler.map(function(e){
+      return tflib.xyz2quat(e,'abc');
+    });
   }
   catch(e){
-    ros.log.error('fanuc:'+e);
+    ros.log.error('fanuc::'+e);
+    return [];
   }
-  let tf=new geometry_msgs.Transform();
-  tf.translation.x=coords[0][0];
-  tf.translation.y=coords[0][1];
-  tf.translation.z=coords[0][2];
-  tf.rotation.x=coords[0][3];
-  tf.rotation.y=coords[0][4];
-  tf.rotation.z=coords[0][5];
-  tf.rotation.w=1;
-  return tf;
-}
-
-protocol.decode=function(msg){
-  let euler=toCoords(msg);
-  return tflib.xyz2quat(euler,'abc');
 }
 
 protocol.encode=function(tf){
-  let RT=tflib.toRT(tf);
+  let RT=tflib.toRT(tf[0]);
   let euler=tflib.fromRTtoEulerABC(RT);
   let tarr=[euler[0].toFixed(3),euler[1].toFixed(3),euler[2].toFixed(3)]
   let rarr=[euler[3].toFixed(3),euler[4].toFixed(3),euler[5].toFixed(3)]
@@ -39,3 +29,9 @@ protocol.encode=function(tf){
 
 module.exports=protocol;
 
+/*
+//  const msg='X2(1,2,3,4,5,6;7,6,5,4,3,2)(0,1)';
+  const msg='X2(1,2,3,4,5,6;7,6)';
+  let coods=protocol.decode(msg.substr(2).trim());
+  console.log(coods);
+*/
