@@ -24,7 +24,7 @@ protocol.encode=function(tf){
   let euler=tflib.fromRTtoEulerABC(RT);
   let tarr=[euler[0].toFixed(3),euler[1].toFixed(3),euler[2].toFixed(3)]
   let rarr=[euler[3].toFixed(3),euler[4].toFixed(3),euler[5].toFixed(3)]
-  return "'"+tarr.concat(rarr).join("''")+"'";
+  return "["+tarr.concat(rarr).join(",")+"]";
 }
 
 module.exports=protocol;
