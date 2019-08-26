@@ -5,6 +5,7 @@ const popen = require('child_process');
 const EventEmitter=require('events').EventEmitter;
 const ros=require('rosnodejs');
 const geometry_msgs=ros.require('geometry_msgs').msg;
+const sensor_msgs=ros.require('sensor_msgs').msg;
 const std_msgs=ros.require('std_msgs').msg;
 
 let Config={
@@ -15,9 +16,11 @@ let Config={
   capt_timeout:5,
   solve_timeout:10,
   recipe_timeout:3,
-  update_frame_id:'J6',
+  base_frame_id:'world',
   source_frame_id:'camera/master0',
-  target_frame_id:'solve0'
+  target_frame_id:'solve0',
+  update_frame_id:'',
+  reverse_frame_id:''
 };
 
 setImmediate(async function(){
@@ -46,6 +49,24 @@ setImmediate(async function(){
   rosNode.subscribe('/response/recipe_load',std_msgs.Bool,async function(ret){
     emitter.emit('recipe',ret.data);
   });
+  if(Config.reverse_frame_id.length>0){
+    let rf=Config.reverse_frame_id;
+    let ctf=await rosNode.getParam('/config_tf');
+    if(ctf.hasOwnProperty(rf)){
+      rosNode.subscribe('/joint_states',sensor_msgs.JointState,async function(joint){
+        let tf=new geometry_msgs.TransformStamped();
+        tf.header.stamp=ros.Time.now();
+        tf.header.frame_id=ctf[rf].parent_frame_id;
+        tf.child_frame_id=rf;
+        let rot2=joint.position[5]*0.5;
+        tf.transform.rotation.x=0;
+        tf.transform.rotation.y=0;
+        tf.transform.rotation.z=Math.sin(rot2);
+        tf.transform.rotation.w=Math.cos(rot2);
+        pub_tf.publish(tf);
+      });
+    }
+  }
   const pub_tf=rosNode.advertise('/update/config_tf',geometry_msgs.TransformStamped);
   const pub_clear=rosNode.advertise('/request/clear',std_msgs.Bool);
   const pub_capture=rosNode.advertise('/request/capture',std_msgs.Bool);
@@ -60,7 +81,7 @@ setImmediate(async function(){
     conn.on('data', function(data){
       msg+=data.toString();
       if(msg.indexOf('(')*msg.indexOf(')')<0) return;
-      if(msg.startsWith('P1')){
+      if(msg.startsWith('P1') && Config.update_frame_id.length>0){
         let tf=new geometry_msgs.TransformStamped();
         tf.header.stamp=ros.Time.now();
         tf.header.frame_id='world';
@@ -76,7 +97,7 @@ setImmediate(async function(){
       }
       else if(msg.startsWith('X1')){   // [X1] ROVI_CAPTURE
         let tfs=protocol.decode(msg.substr(2).trim());
-        if(tfs.length>0){
+        if(tfs.length>0 && Config.update_frame_id.length>0){
           let tf=new geometry_msgs.TransformStamped();
           tf.header.stamp=ros.Time.now();
           tf.header.frame_id='world';
