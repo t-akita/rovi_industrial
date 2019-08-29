@@ -81,6 +81,7 @@ setImmediate(async function(){
     conn.on('data', function(data){
       msg+=data.toString();
       if(msg.indexOf('(')*msg.indexOf(')')<0) return;
+console.log("rsock "+msg);
       if(msg.startsWith('P1') && Config.update_frame_id.length>0){
         let tf=new geometry_msgs.TransformStamped();
         tf.header.stamp=ros.Time.now();
@@ -97,6 +98,7 @@ setImmediate(async function(){
       }
       else if(msg.startsWith('X1')){   // [X1] ROVI_CAPTURE
         let tfs=protocol.decode(msg.substr(2).trim());
+console.log("tfs "+tfs);
         if(tfs.length>0 && Config.update_frame_id.length>0){
           let tf=new geometry_msgs.TransformStamped();
           tf.header.stamp=ros.Time.now();
@@ -104,6 +106,7 @@ setImmediate(async function(){
           tf.child_frame_id=Config.update_frame_id;
           tf.transform=tfs[0];
           pub_tf.publish(tf);
+console.log("tf update "+tf);
         }
         setTimeout(function(){
           let f=new std_msgs.Bool();
