@@ -8,7 +8,7 @@ let protocol={}
 
 protocol.decode=function(msg){
   try{
-    let euler=toCoords(msg);
+    let euler=parser.parse(msg);
     return euler.map(function(e){
       return tflib.xyz2quat(e,'cba');
     });

@@ -148,7 +148,7 @@ xyz2quat: function(e,rOrder) {
   let sy = Math.sin(e.rotation.y * k);
   let sz = Math.sin(e.rotation.z * k);
   if (rOrder=="cba") {
-    tf.rotation.x = cy * cz * sx - cx * sypub_tf * sz;
+    tf.rotation.x = cy * cz * sx - cx * sy * sz;
     tf.rotation.y = cy * sx * sz + cx * cz * sy;
     tf.rotation.z = cx * cy * sz - cz * sx * sy;
     tf.rotation.w = sx * sy * sz + cx * cy * cz;
