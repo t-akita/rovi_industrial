@@ -1,0 +1,88 @@
+ Program
+   Robot Program
+     Script: X0.script
+     MoveJ
+       CapturePoint_1
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_2
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_3
+     Wait: 1.0
+     Script: X1.script
+     Wait: 1.0
+     MoveJ
+       CapturePoint_4
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_5
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_6
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_7
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_8
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_9
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_10
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_11
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_12
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_13
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_14
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_15
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_16
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_17
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_18
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_19
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_20
+     Wait: 1.0
+     Script: X1.script
+     MoveJ
+       CapturePoint_1
+     Script: X2-rcalib.script
+     Halt

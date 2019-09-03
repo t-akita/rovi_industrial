@@ -1,0 +1,16 @@
+ Program
+   Robot Program
+     var_1:=p[0.0,0.0,0.0,0.0,0.0,0.0]
+     Plane_1_var:=p[0,0,0,0,0,0]
+     ベース_var:=p[0,0,0,0,0,0]
+     Script: X0.script
+     MoveJ
+       CapturePoint_1
+     Wait: 1.0
+     Script: X1.script
+     Wait: 1.0
+     Script: X2.script
+     MoveL
+       ベース_var:=var_1
+       Waypoint_1
+     Halt

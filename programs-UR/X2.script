@@ -1,0 +1,28 @@
+address="192.168.221.2"
+port=3000
+sname="mt"
+timeout=60
+socket_open(address,port,sname)
+socket_send_line("X2()",sname)
+ret=socket_read_line(sname,timeout)
+if (ret != "OK"):
+  popup(ret,title="X2",blocking=True)
+else:
+  f=socket_read_ascii_float(6,sname,timeout)
+  while (f[0]!=6):
+    sleep(0.3)
+    f=socket_read_ascii_float(6,sname,timeout)
+  end
+  rvec=rpy2rotvec([d2r(f[4]),d2r(f[5]),d2r(f[6])])
+  counter=0
+  while (counter<3):
+    var_1[counter]=f[counter+1]/1000.
+    counter=counter+1
+  end
+  counter=0
+  while (counter<3):
+    var_1[counter+3]=rvec[counter]
+    counter=counter+1
+  end
+end
+socket_close(sname)

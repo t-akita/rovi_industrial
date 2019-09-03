@@ -1,0 +1,11 @@
+address="192.168.221.2"
+port=3000
+sname="mt"
+socket_open(address,port,sname)
+p=get_actual_tcp_pose()
+socket_send_line("X0()",sname)
+ret=socket_read_line(sname)
+socket_close(sname)
+if (ret != "OK"):
+  popup(ret,title="X0",blocking=True)
+end

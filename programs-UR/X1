@@ -1,0 +1,3 @@
+socket_open("192.168.221.2",3000,"mt")
+socket_send_line("X1(0,1,2,3,4,5)","mt")
+socket_close("mt")

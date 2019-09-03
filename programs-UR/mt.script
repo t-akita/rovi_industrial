@@ -1,0 +1,106 @@
+def mt():
+  set_gravity([0.0, 0.0, 9.82])
+  set_safety_mode_transition_hardness(1)
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 1)
+  set_tool_analog_input_domain(1, 1)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_tool_voltage(0)
+  set_input_actions_to_default()
+  set_tcp(p[0.0,0.0,0.0,0.0,0.0,0.0])
+  set_payload(0.0)
+  global u12505u12540u12473=p[0.0,0.0,0.0,0.0,0.0,0.0]
+  global Plane_1=p[0.19056053098066542,-0.10551535698216379,0.35998231724851576,2.9860096827293832E-5,4.53948552633372E-4,-3.141544530833095]
+  while (True):
+    $ 1 "Robot Program"
+    $ 2 "var_1:=p[0.0,0.0,0.0,0.0,0.0,0.0]"
+    global var_1=p[0.0,0.0,0.0,0.0,0.0,0.0]
+    $ 3 "Plane_1_var:=p[0,0,0,0,0,0]"
+    global Plane_1=p[0,0,0,0,0,0]
+    $ 4 "ベース_var:=p[0,0,0,0,0,0]"
+    global u12505u12540u12473=p[0,0,0,0,0,0]
+    $ 5 "Script: X0.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    socket_send_line("X0()",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X0",blocking=True)
+    end
+    $ 6 "MoveJ"
+    $ 7 "CapturePoint_1"
+    movej(get_inverse_kin(p[.190539400591, -.105512235510, .739544151372, -2.169001364373, 2.124803656468, -.097000176310], qnear=[0.0012699533253908157, -1.2332819143878382, -0.9479177633868616, -2.412408177052633, 1.5799448490142822, 0.003451456781476736]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 8 "Wait: 1.0"
+    sleep(1.0)
+    $ 9 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    timeout=10
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname,timeout)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 10 "Wait: 1.0"
+    sleep(1.0)
+    $ 11 "Script: X2.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    timeout=30
+    socket_open(address,port,sname)
+    socket_send_line("X2()",sname)
+    ret=socket_read_line(sname,timeout)
+    if (ret != "OK"):
+      popup(ret,title="X2",blocking=True)
+    else:
+      f=socket_read_ascii_float(6,sname,timeout)
+      while (f[0]!=6):
+        sleep(0.3)
+        f=socket_read_ascii_float(6,sname,timeout)
+      end
+      rvec=rpy2rotvec([d2r(f[4]),d2r(f[5]),d2r(f[6])])
+      counter=0
+      while (counter<3):
+        var_1[counter]=f[counter+1]/1000.
+        counter=counter+1
+      end
+      counter=0
+      while (counter<3):
+        var_1[counter+3]=rvec[counter]
+        counter=counter+1
+      end
+    end
+    socket_close(sname)
+    $ 12 "MoveL"
+    $ 13 "ベース_var:=var_1"
+    global u12505u12540u12473=var_1
+    $ 14 "Waypoint_1"
+    movel(pose_trans(u12505u12540u12473, p[0.19055795541668538,-0.10551433631915648,0.3919574068268617,-2.1691007835451,2.12474401582549,-0.09703846402672615]), a=1.2, v=0.25)
+    $ 15 "Halt"
+    halt
+  end
+end

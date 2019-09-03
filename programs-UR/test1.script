@@ -1,0 +1,646 @@
+def test1():
+  set_gravity([0.0, 0.0, 9.82])
+  set_safety_mode_transition_hardness(1)
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 1)
+  set_tool_analog_input_domain(1, 1)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_tool_voltage(0)
+  set_input_actions_to_default()
+  set_tcp(p[0.0,0.0,0.0,0.0,0.0,0.0])
+  set_payload(0.0)
+  global u12505u12540u12473=p[0.0,0.0,0.0,0.0,0.0,0.0]
+  while (True):
+    $ 1 "Robot Program"
+    $ 2 "Script: X0.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    socket_send_line("X0()",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X0",blocking=True)
+    end
+    $ 3 "MoveJ"
+    $ 4 "CapturePoint_1"
+    movej(get_inverse_kin(p[.190534391931, -.105515237010, .739553204967, -2.168997480811, 2.124803819610, -.097077744761], qnear=[0.0012699533253908157, -1.2332819143878382, -0.9478939215289515, -2.412396256123678, 1.579908847808838, 0.003451456781476736]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 5 "Wait: 1.0"
+    sleep(1.0)
+    $ 6 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 7 "MoveJ"
+    $ 8 "CapturePoint_2"
+    movej(get_inverse_kin(p[.021408314514, -.107345628058, .720581909061, -1.987724163885, 1.910528834782, -.239922612540], qnear=[-0.5254343191729944, -0.9562972227679651, -1.158621613179342, -2.326052967702047, 1.8687758445739746, -0.5012505690204065]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 9 "Wait: 1.0"
+    sleep(1.0)
+    $ 10 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 11 "MoveJ"
+    $ 12 "CapturePoint_3"
+    movej(get_inverse_kin(p[.224996987338, .033123044464, .755906575302, 2.080153463941, -2.038709171455, .326265662177], qnear=[0.7380713820457458, -1.3986228148089808, -0.6552918593036097, -2.866707150136129, 1.32891047000885, 0.769621729850769]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 13 "Wait: 1.0"
+    sleep(1.0)
+    $ 14 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 15 "Wait: 1.0"
+    sleep(1.0)
+    $ 16 "MoveJ"
+    $ 17 "CapturePoint_4"
+    movej(get_inverse_kin(p[.307887296328, .042318064927, .756523469362, 2.013713271205, -1.957526889678, .339378596763], qnear=[0.5766000151634216, -1.6216438452350062, -0.442695442830221, -2.9173463026629847, 1.263674020767212, 0.6162524819374084]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 18 "Wait: 1.0"
+    sleep(1.0)
+    $ 19 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 20 "MoveJ"
+    $ 21 "CapturePoint_5"
+    movej(get_inverse_kin(p[.273104593345, -.152051266657, .767525313781, 1.143133697526, -2.898651061507, -.238740541549], qnear=[-0.1879971663104456, -1.6216557661639612, -0.4427550474749964, -2.7411344687091272, 1.6780166625976562, 0.6512089371681213]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 22 "Wait: 1.0"
+    sleep(1.0)
+    $ 23 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 24 "MoveJ"
+    $ 25 "CapturePoint_6"
+    movej(get_inverse_kin(p[.253251138573, -.182138351015, .772160127441, .032810918757, 3.099706367741, .400722216870], qnear=[-0.3376362959491175, -1.6216676870929163, -0.442695442830221, -2.7106574217425745, 1.8054478168487549, 1.2713981866836548]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 26 "Wait: 1.0"
+    sleep(1.0)
+    $ 27 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 28 "MoveJ"
+    $ 29 "CapturePoint_7"
+    movej(get_inverse_kin(p[.289745183806, .058465716501, .766927932743, 2.746565788428, .307140448650, .000906569419], qnear=[0.6694747805595398, -1.591588322316305, -0.4427073637591761, -2.893705193196432, 1.2429828643798828, -1.0622366110431116]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 30 "Wait: 1.0"
+    sleep(1.0)
+    $ 31 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 32 "MoveJ"
+    $ 33 "CapturePoint_8"
+    movej(get_inverse_kin(p[-.036697817608, -.187425516342, .813704129018, -2.513224601695, 1.103539214715, -.577075958477], qnear=[0.6693309545516968, -1.0125201384173792, -0.4426830450641077, -2.763902012501852, 1.3626490831375122, -0.09699565569032842]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 34 "Wait: 1.0"
+    sleep(1.0)
+    $ 35 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 36 "MoveJ"
+    $ 37 "CapturePoint_9"
+    movej(get_inverse_kin(p[.015550420911, -.161040705905, .700233409149, -2.548527561051, 1.112871160477, -.557701617640], qnear=[0.7625131607055664, -0.6783855597125452, -1.1708958784686487, -2.4249022642718714, 1.315503478050232, -0.015412632619039357]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 38 "Wait: 1.0"
+    sleep(1.0)
+    $ 39 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 40 "MoveJ"
+    $ 41 "CapturePoint_10"
+    movej(get_inverse_kin(p[-.128422322639, -.000499509914, .724899058885, -1.225621139161, 2.242818192231, -.600108780043], qnear=[-0.7042344252215784, -0.6784337202655237, -1.1708720366107386, -2.229396168385641, 1.851616382598877, -0.015340630208150685]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 42 "Wait: 1.0"
+    sleep(1.0)
+    $ 43 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 44 "MoveJ"
+    $ 45 "CapturePoint_11"
+    movej(get_inverse_kin(p[-.098354890439, .079256999321, .663133713806, -.667816925107, 2.371115369682, -.641438069635], qnear=[-1.2272208372699183, -0.5248554388629358, -1.4098690191852015, -2.1720202604876917, 2.08359694480896, -0.01728231111635381]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 46 "Wait: 1.0"
+    sleep(1.0)
+    $ 47 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 48 "MoveJ"
+    $ 49 "CapturePoint_12"
+    movej(get_inverse_kin(p[-.044236152955, .120624224878, .639493980163, -.027986161504, 2.520778852594, -.529259811796], qnear=[-1.707731072102682, -0.5249031225787562, -1.4098451773272913, -2.401137177144186, 2.1624374389648438, -0.017270390187398732]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 50 "Wait: 1.0"
+    sleep(1.0)
+    $ 51 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 52 "MoveJ"
+    $ 53 "CapturePoint_13"
+    movej(get_inverse_kin(p[.032967246194, .140081252389, .667218516472, .768878013777, 2.440256513967, -.280515259339], qnear=[-2.2332280317889612, -0.676361385975973, -1.160577122365133, -2.8555458227740687, 2.1700234413146973, -0.01752168336977178]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 54 "Wait: 1.0"
+    sleep(1.0)
+    $ 55 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 56 "MoveJ"
+    $ 57 "CapturePoint_14"
+    movej(get_inverse_kin(p[.032955438485, .140060848652, .667229009623, -1.007748133919, 2.547169782329, -.739965939733], qnear=[-2.2332399527179163, -0.6763976255999964, -1.160577122365133, -2.85549766222109, 2.1700472831726074, -1.3814733664142054]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 58 "Wait: 1.0"
+    sleep(1.0)
+    $ 59 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 60 "MoveJ"
+    $ 61 "CapturePoint_15"
+    movej(get_inverse_kin(p[-.098976241094, -.111428533776, .640718033871, -1.922149971491, 1.755780480672, -.716756441014], qnear=[0.006841119844466448, -0.47218639055360967, -1.4922898451434534, -2.056896511708395, 1.51628577709198, -0.07959252992738897]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 62 "Wait: 1.0"
+    sleep(1.0)
+    $ 63 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 64 "MoveJ"
+    $ 65 "CapturePoint_16"
+    movej(get_inverse_kin(p[-.125723942530, -.111714795320, .573265588218, -1.713399125151, 1.786032792936, -.753232989836], qnear=[0.007008899003267288, -0.2709429899798792, -1.7066577116595667, -1.9307768980609339, 1.515830397605896, 0.04803352430462837]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 66 "Wait: 1.0"
+    sleep(1.0)
+    $ 67 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 68 "MoveJ"
+    $ 69 "CapturePoint_17"
+    movej(get_inverse_kin(p[.307338362863, -.365216871801, .635603058534, -1.839201932701, 1.909686855554, .759621955340], qnear=[-0.7138965765582483, -1.8834050337420862, -0.5443022886859339, -2.8202388922320765, 1.9762024879455566, -0.7661612669574183]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 70 "Wait: 1.0"
+    sleep(1.0)
+    $ 71 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 72 "MoveJ"
+    $ 73 "CapturePoint_18"
+    movej(get_inverse_kin(p[.285041653513, -.346036823034, .692111658542, -.201938726745, -2.993117798103, -.849312739878], qnear=[-0.7138965765582483, -1.88348895708193, -0.37110835710634404, -2.8202508131610315, 1.9762983322143555, 0.9399505257606506]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 74 "Wait: 1.0"
+    sleep(1.0)
+    $ 75 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 76 "MoveJ"
+    $ 77 "CapturePoint_19"
+    movej(get_inverse_kin(p[-.014787990232, -.142877292178, .761303901734, .984642984160, 2.468869975794, .633387829307], qnear=[-1.2411797682391565, -1.2279260794269007, -0.8265231291400355, -2.732741657887594, 2.171389102935791, 1.0910555124282837]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 78 "Wait: 1.0"
+    sleep(1.0)
+    $ 79 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 80 "MoveJ"
+    $ 81 "CapturePoint_20"
+    movej(get_inverse_kin(p[-.004371122538, -.203917812922, .753086233545, -1.863098534015, 1.878274421720, -.096159359902], qnear=[-1.2411797682391565, -1.3497465292560022, -0.757369343434469, -2.7561209837542933, 2.032703161239624, -1.243354622517721]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 82 "Wait: 1.0"
+    sleep(1.0)
+    $ 83 "Script: X1.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    rpy=rotvec2rpy([p[3],p[4],p[5]])
+    socket_send_string("X1(",sname)
+    socket_send_string(p[0]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[1]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(p[2]*1000.,sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[0]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[1]),sname)
+    socket_send_string(",",sname)
+    socket_send_string(r2d(rpy[2]),sname)
+    socket_send_line(")",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    if (ret != "OK"):
+      popup(ret,title="X1",blocking=True)
+    end
+    $ 84 "MoveJ"
+    $ 85 "CapturePoint_1"
+    movej(get_inverse_kin(p[.190534391931, -.105515237010, .739553204967, -2.168997480811, 2.124803819610, -.097077744761], qnear=[0.0012699533253908157, -1.2332819143878382, -0.9478939215289515, -2.412396256123678, 1.579908847808838, 0.003451456781476736]), a=1.3962634015954636, v=1.0471975511965976)
+    $ 86 "Script: X2-rcalib.script"
+    address="192.168.221.2"
+    port=3000
+    sname="mt"
+    socket_open(address,port,sname)
+    p=get_actual_tcp_pose()
+    socket_send_line("X2()",sname)
+    ret=socket_read_line(sname)
+    socket_close(sname)
+    $ 87 "Halt"
+    halt
+  end
+end
