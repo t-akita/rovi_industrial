@@ -1,0 +1,22 @@
+def Put_into_box_CB3_UR5_v2():
+  set_gravity([0.0, 0.0, 9.82])
+  set_tcp(p[0.0,0.0,0.0,0.0,0.0,0.0])
+  set_payload(0.0)
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 1)
+  set_tool_analog_input_domain(1, 1)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_tool_voltage(0)
+  set_input_actions_to_default()
+  set_safety_mode_transition_hardness(0)
+  $ 1 "Robot Program"
+  $ 2 "Set"
+  set_payload(0.0)
+  $ 3 "MoveJ"
+  $ 4 "Home"
+  movej([8.027432885082675E-16, -1.5707963267948966, 4.228388472693467E-18, -1.5707963267948966, -1.5260145577733475E-17, 5.30825383648903E-16], a=1.3962634015954636, v=0.17453292519943295)
+  $ 5 "Stop"
+  movej([2.298375936015768E-15, 1.7763568394002505E-15, -2.827433388230814, -1.8849555921538759, 3.1415927410125732, 1.5707963267948957], a=1.3962634015954636, v=0.17453292519943295)
+end

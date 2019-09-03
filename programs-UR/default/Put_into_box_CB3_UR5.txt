@@ -1,0 +1,12 @@
+ Program
+   Robot Program
+     Set
+     MoveJ
+       Home
+       Waypoint_25
+       Popup
+       Waypoint_26
+       Popup
+       Home
+       Waypoint_23
+       Popup

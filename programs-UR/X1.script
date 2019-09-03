@@ -1,0 +1,25 @@
+address="192.168.221.2"
+port=3000
+sname="mt"
+timeout=10
+socket_open(address,port,sname)
+p=get_actual_tcp_pose()
+rpy=rotvec2rpy([p[3],p[4],p[5]])
+socket_send_string("X1(",sname)
+socket_send_string(p[0]*1000.,sname)
+socket_send_string(",",sname)
+socket_send_string(p[1]*1000.,sname)
+socket_send_string(",",sname)
+socket_send_string(p[2]*1000.,sname)
+socket_send_string(",",sname)
+socket_send_string(r2d(rpy[0]),sname)
+socket_send_string(",",sname)
+socket_send_string(r2d(rpy[1]),sname)
+socket_send_string(",",sname)
+socket_send_string(r2d(rpy[2]),sname)
+socket_send_line(")",sname)
+ret=socket_read_line(sname,timeout)
+socket_close(sname)
+if (ret != "OK"):
+  popup(ret,title="X1",blocking=True)
+end
