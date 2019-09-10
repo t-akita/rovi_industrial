@@ -2,7 +2,6 @@
   <include file="$(find ur_modern_driver)/launch/$(arg mc)_bringup.launch">
     <arg name="robot_ip" value="$(arg address)" />
   </include>
-  <rosparam command="load" file="$(find rovi_industrial)/config.yaml" />
   <node pkg="rovi_industrial" type="r_socket.js" name="" output="screen">
     <param name="/config/rsocket/protocol" type="str" value="ur" />
   </node>
