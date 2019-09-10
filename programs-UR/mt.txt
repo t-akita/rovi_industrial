@@ -1,7 +1,5 @@
  Program
    Robot Program
-     var_1:=p[0.0,0.0,0.0,0.0,0.0,0.0]
-     Plane_1_var:=p[0,0,0,0,0,0]
      ベース_var:=p[0,0,0,0,0,0]
      Script: X0.script
      MoveJ
