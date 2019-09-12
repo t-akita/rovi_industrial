@@ -188,7 +188,7 @@ setImmediate(async function(){
               conn.write(cod+"\n");
             }
             else{
-              ros.log.warn("rsocket tf error");
+              ros.log.warn("rsocket tf error "+tf);
               conn.write('NG\n');
               conn.write('923');//failed to lookup
             }
