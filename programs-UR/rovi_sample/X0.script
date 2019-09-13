@@ -1,0 +1,7 @@
+address="172.16.58.34"
+port=3000
+socket_open(address,port)
+socket_send_line("X0()")
+ret=socket_read_line(timeout=3)
+socket_close()
+Base=p[0,0,0,0,0,0]

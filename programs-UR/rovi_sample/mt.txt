@@ -1,0 +1,36 @@
+ Program
+   Robot Program
+     MoveJ
+       Home
+     Loop
+       Script: X0.script
+       'MoveJ'
+       MoveJ
+         master0
+         Wait: 0.5
+       X_error≔ True 
+       Loop X_error
+         Loop X_error
+           Script: X1.script
+           Wait: 0.5
+         Script: X2.script
+       Base_var≔X_var
+       MoveL
+         close_to_1
+         glasp_1
+         go_up_1
+       MoveJ
+         wp3
+         wp4
+         wp5
+         wp6
+         wp7
+       MoveJ
+         Home
+     Halt
+     Manual operation
+       MoveJ
+         master0
+       Base_var≔Base
+       Script: X0.script
+       Script: X1.script

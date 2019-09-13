@@ -7,6 +7,7 @@ const ros=require('rosnodejs');
 const geometry_msgs=ros.require('geometry_msgs').msg;
 const sensor_msgs=ros.require('sensor_msgs').msg;
 const std_msgs=ros.require('std_msgs').msg;
+let tf_lookup=null;
 
 let Config={
   protocol:'fanuc',
@@ -34,7 +35,6 @@ setImmediate(async function(){
   }
   const protocol=require('./'+Config.protocol+'.js');
   Object.assign(process.env,{stdio:['pipe','pipe',2]});
-  const tf_lookup=popen.exec('tf_lookup.py',{env:process.env});
 
 //ROS events//////////////////
   rosNode.subscribe('/response/clear',std_msgs.Bool,async function(ret){
@@ -49,6 +49,7 @@ setImmediate(async function(){
   rosNode.subscribe('/response/recipe_load',std_msgs.Bool,async function(ret){
     emitter.emit('recipe',ret.data);
   });
+  const pub_conn=rosNode.advertise('/rsocket/stat',std_msgs.Bool);
   const pub_tf=rosNode.advertise('/update/config_tf',geometry_msgs.TransformStamped);
   const pub_clear=rosNode.advertise('/request/clear',std_msgs.Bool);
   const pub_capture=rosNode.advertise('/request/capture',std_msgs.Bool);
@@ -76,12 +77,30 @@ setImmediate(async function(){
     }
   }
 
+  let stat_out_timer=null;
+  function stat_out(f){
+    let stat=new std_msgs.Bool();
+    stat.data=f;
+    pub_conn.publish(stat);
+    if(f){
+      if(stat_out_timer==null) stat_out_timer=setInterval(function(){ stat_out(f);},500);
+    }
+    else{
+      if(stat_out_timer!=null){
+        clearInterval(stat_out_timer);
+        stat_out_timer=null;
+      }
+    }
+  }
+
 //Socket events//////////////////
   const server = net.createServer(function(conn){
     conn.setTimeout(Config.socket_timeout*1000);
     let msg='';
     let wdt=null;
+    let stat
     conn.on('data', function(data){
+      stat_out(true);
       msg+=data.toString();
       if(msg.indexOf('(')*msg.indexOf(')')<0) return;//until msg will like "??(???)"
       ros.log.info("rsocket "+msg);
@@ -179,16 +198,25 @@ setImmediate(async function(){
             conn.write('922');//failed to solve
             return;
           }
+          if(tf_lookup==null){
+            tf_lookup=popen.exec('tf_lookup.py',{env:process.env});
+            tf_lookup.stdout.on('data',function(data){
+              let tf=JSON.parse(data);
+              emitter.emit('tf_transform',tf);
+            });
+          }
+          ros.log.info("tf_lookup|"+Config.base_frame_id+' '+Config.source_frame_id+' '+Config.target_frame_id);
           tf_lookup.stdin.write(Config.base_frame_id+' '+Config.source_frame_id+' '+Config.target_frame_id+'\n');
           emitter.once('tf_transform',function(tf){
+            ros.log.info("rsocket tf:"+JSON.stringify(tf));
             if(tf.hasOwnProperty('translation')){
               let cod=protocol.encode([tf]);
-              ros.log.info("rsocket tf:"+cod);
+              ros.log.info("rsocket encode:"+cod);
               conn.write('OK\n');
               conn.write(cod+"\n");
             }
             else{
-              ros.log.warn("rsocket tf error "+tf);
+              ros.log.warn("rsocket tf error");
               conn.write('NG\n');
               conn.write('923');//failed to lookup
             }
@@ -226,6 +254,7 @@ setImmediate(async function(){
     conn.on('close', function(){
       if(wdt!=null) clearTimeout(wdt);
       wdt=null;
+      stat_out(false);
       ros.log.warn('r_socket CLOSED.');
     });
     conn.on('timeout',function(){
@@ -239,10 +268,4 @@ setImmediate(async function(){
       ros.log.warn('Net:socket error '+err);
     });
   }).listen(Config.port);
-
-//tf_lookup events//////////////////
-  tf_lookup.stdout.on('data',function(data){
-    let tf=JSON.parse(data);
-    emitter.emit('tf_transform',tf);
-  });
 });
