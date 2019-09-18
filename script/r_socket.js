@@ -17,7 +17,7 @@ let Config={
   capt_timeout:5,
   solve_timeout:10,
   recipe_timeout:3,
-  base_frame_id:'world',
+  base_frame_id:'base',
   source_frame_id:'camera/master0',
   target_frame_id:'solve0',
   update_frame_id:'',
@@ -107,7 +107,7 @@ setImmediate(async function(){
       if(msg.startsWith('P1') && Config.update_frame_id.length>0){
         let tf=new geometry_msgs.TransformStamped();
         tf.header.stamp=ros.Time.now();
-        tf.header.frame_id='world';
+        tf.header.frame_id=Config.base_frame_id;
         tf.child_frame_id=Config.update_frame_id;
         tf.transform=protocol.decode(msg.substr(2));
         if(tf.transform!=null) pub_tf.publish(tf);
@@ -130,7 +130,7 @@ setImmediate(async function(){
         if(tfs.length>0 && Config.update_frame_id.length>0){
           let tf=new geometry_msgs.TransformStamped();
           tf.header.stamp=ros.Time.now();
-          tf.header.frame_id='world';
+          tf.header.frame_id=Config.base_frame_id;
           tf.child_frame_id=Config.update_frame_id;
           tf.transform=tfs[0];
           pub_tf.publish(tf);
@@ -164,7 +164,7 @@ setImmediate(async function(){
       else if(msg.startsWith('X2')){//--------------------[X2] ROVI_SOLVE
         let tfs=protocol.decode(msg.substr(2).trim());
         const path=new geometry_msgs.PoseArray();
-        path.header.frame_id='world';
+        path.header.frame_id=Config.base_frame_id;
         path.header.stamp=ros.Time.now();
         tfs.forEach(function(t){
           let p=new geometry_msgs.Pose();
