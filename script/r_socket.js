@@ -16,7 +16,7 @@ let Config={
   delay:100,
   capt_timeout:10,
   solve_timeout:10,
-  recipe_timeout:10,
+  recipe_timeout:3,
   base_frame_id:'base',
   source_frame_id:'camera/master0',
   target_frame_id:'solve0',
