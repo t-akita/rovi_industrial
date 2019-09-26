@@ -15,15 +15,7 @@ exports.parse=function(str){
       ros.log.warn('r-parser warn: short elements '+ary);
       return null;
     }
-    let tf=new geometry_msgs.Transform();
-    tf.translation.x=e[0];
-    tf.translation.y=e[1];
-    tf.translation.z=e[2];
-    tf.rotation.x=e[3];
-    tf.rotation.y=e[4];
-    tf.rotation.z=e[5];
-    tf.rotation.w=1;
-    return tf;
+    return e;
   }).filter(e=>e);
 }
 /*
