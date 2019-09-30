@@ -65,38 +65,36 @@
 65 GoSub *COM_OPEN
 66 Print #1, "X0()"
 67 Input #1, COK$    ' Reset OK or not OK.
-68 If COK$="OK" Then MX0%=MX0%+1
-69 GoSub *COM_CLOSE
-70 Return
-71 ' --------------------------------------------------
-72 ' [X1] CAPTURE
-73 ' --------------------------------------------------
-74 *X1
-75 GoSub *COM_OPEN
-76 Print #1, "X1";P_Curr
-77 Input #1, COK$    ' Capture OK or not OK.
-78 If COK$="OK" Then MX1%=MX1%+1
-79 GoSub *COM_CLOSE
-80 Return
+68 GoSub *COM_CLOSE
+69 Return
+70 ' --------------------------------------------------
+71 ' [X1] CAPTURE
+72 ' --------------------------------------------------
+73 *X1
+74 GoSub *COM_OPEN
+75 Print #1, "X1";P_Curr
+76 Input #1, COK$    ' Capture OK or not OK.
+77 GoSub *COM_CLOSE
+78 Return
+79 ' --------------------------------------------------
+80 ' [X2] SOLVE
 81 ' --------------------------------------------------
-82 ' [X2] SOLVE
-83 ' --------------------------------------------------
-84 *X2
-85 GoSub *COM_OPEN
-86 Print #1, "X2()"
-87 Input #1, COK$    ' Solve OK or not OK.
-88 If COK$="OK" Then Input #1, PX2
-89 GoSub *COM_CLOSE
-90 Return
+82 *X2
+83 GoSub *COM_OPEN
+84 Print #1, "X2()"
+85 Input #1, COK$    ' Solve OK or not OK.
+86 If COK$="OK" Then Input #1, PX2
+87 GoSub *COM_CLOSE
+88 Return
+89 ' --------------------------------------------------
+90 ' [X3] RECIPE
 91 ' --------------------------------------------------
-92 ' [X3] RECIPE
-93 ' --------------------------------------------------
-94 *X3
-95 GoSub *COM_OPEN
-96 Print #1, "X3("+CRCP$+")"
-97 Input #1, COK$    ' Recipe OK or not OK.
-98 GoSub *COM_CLOSE
-99 Return
+92 *X3
+93 GoSub *COM_OPEN
+94 Print #1, "X3("+CRCP$+")"
+95 Input #1, COK$    ' Recipe OK or not OK.
+96 GoSub *COM_CLOSE
+97 Return
 PCAPT=(355.000,-300.000,640.000,-180.000,0.000,-180.000)(7,0)
 PORG=(355.000,0.000,640.000,180.000,0.000,180.000)(7,0)
 PPCK=(444.960,4.920,309.000,180.000,0.000,180.000,0.000,0.000)(7,0)
