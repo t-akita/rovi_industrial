@@ -2,11 +2,13 @@ address="172.16.58.34"
 port=3000
 X_error=False
 socket_open(address,port)
-socket_send_line("X1()")
+socket_send_string("X3(")
+socket_send_string(X_recipe)
+socket_send_line(")")
 ret=socket_read_line(timeout=10)
 if (ret!="OK"):
   X_error=True
   code=socket_read_string()
-  popup(code,title="X1",blocking=True)
+  popup(code,title="X3",blocking=True)
 end
 socket_close()

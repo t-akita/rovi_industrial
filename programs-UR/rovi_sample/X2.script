@@ -5,6 +5,7 @@ X_error=False
 socket_open(address,port)
 socket_send_line("X2()")
 ret=socket_read_line(timeout=10)
+#popup(ret,title="ret",blocking=True)
 if (ret != "OK"):
   X_error=True
   socket_close()
@@ -15,16 +16,10 @@ else:
     f=socket_read_ascii_float(6)
   end
   socket_close()
-  #popup(f,title="OK",blocking=True)
-  rvec=rpy2rotvec([d2r(f[4]),d2r(f[5]),d2r(f[6])])
-  counter=0
-  while (counter<3):
-    X_var[counter]=f[counter+1]
-    counter=counter+1
-  end
-  counter=0
-  while (counter<3):
-    X_var[counter+3]=rvec[counter]
-    counter=counter+1
-  end
+  X_var[0]=f[1]
+  X_var[1]=f[2]
+  X_var[2]=f[3]
+  X_var[3]=f[4]
+  X_var[4]=f[5]
+  X_var[5]=f[6]
 end
