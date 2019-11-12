@@ -21,7 +21,8 @@ let Config={
   source_frame_id:'camera/master0',
   target_frame_id:'solve0',
   update_frame_id:'',
-  reverse_frame_id:''
+  reverse_frame_id:'',
+  reverse_direction:1
 };
 
 setImmediate(async function(){
@@ -55,23 +56,28 @@ setImmediate(async function(){
   const pub_solve=rosNode.advertise('/request/solve',std_msgs.Bool);
   const pub_recipe=rosNode.advertise('/request/recipe_load',std_msgs.String);
   const pub_path=rosNode.advertise('/request/path',geometry_msgs.PoseArray);
-
+//Function///////////////
+  let reverse_frame_updater=null;
 //Rotate J7 by J6////////////////
   if(Config.reverse_frame_id.length>0){
     let rf=Config.reverse_frame_id;
+    let rd=Config.reverse_direction;
     let ctf=await rosNode.getParam('/config_tf');
     if(ctf.hasOwnProperty(rf)){
-      rosNode.subscribe('/joint_states',sensor_msgs.JointState,async function(joint){
+      reverse_frame_updater=function(j6){
         let tf=new geometry_msgs.TransformStamped();
         tf.header.stamp=ros.Time.now();
         tf.header.frame_id=ctf[rf].parent_frame_id;
         tf.child_frame_id=rf;
-        let rot2=joint.position[5]*0.5;
+        let rot2=j6*0.5*rd;
         tf.transform.rotation.x=0;
         tf.transform.rotation.y=0;
         tf.transform.rotation.z=Math.sin(rot2);
         tf.transform.rotation.w=Math.cos(rot2);
         pub_tf.publish(tf);
+      }
+      rosNode.subscribe('/joint_states',sensor_msgs.JointState,async function(joint){
+        reverse_frame_updater(joint.position[joint.position.length-1]);
       });
     }
   }
@@ -134,7 +140,7 @@ setImmediate(async function(){
         if(tfs.length>0)
           ros.log.warn("rsocket::tf parse "+JSON.stringify(tfs));
         else ros.log.warn("rsocket::tf parse nothing");
-        if(tfs.length>0 && Config.update_frame_id.length>0){
+        if(tfs.length>0 && tfs[0].hasOwnProperty('translation') && Config.update_frame_id.length>0){
           let tf=new geometry_msgs.TransformStamped();
           tf.header.stamp=ros.Time.now();
           tf.header.frame_id=Config.base_frame_id;
@@ -265,6 +271,13 @@ setImmediate(async function(){
           if(ret) conn.write('OK'+protocol.lf);
           else respNG(conn,932,protocol.delim,protocol.lf);
         });
+      }
+      else if(msg.startsWith('J6')){
+        let j6=await protocol.decode(msg.substr(2).trim());
+        console.log("J6 "+j6[0][0])
+        if(reverse_frame_updater!=null){
+          reverse_frame_updater(j6[0][0]);
+        }
       }
       msg='';
     });

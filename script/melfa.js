@@ -1,31 +1,18 @@
 #!/usr/bin/env node
 
-const ros=require('rosnodejs');
-const geometry_msgs=ros.require('geometry_msgs').msg;
-const parser=require('./rparser');
 const tflib=require('./tflib');
-let protocol={}
+tflib.set('rzyx deg');
 
-protocol.decode=function(msg){
-  try{
-    let euler=parser.parse(msg);
-    return euler.map(function(e){
-      return tflib.xyz2quat(e,'cba');
-    });
-  }
-  catch(e){
-    ros.log.error('melfa::'+e);
-    return [];
-  }  
-}
-
-protocol.encode=function(tf){
-  let RT=tflib.toRT(tf[0]);
-  let euler=tflib.fromRTtoEulerCBA(RT);
+const protocol=require('./protocol');
+protocol.tflib=tflib;
+protocol.encode=async function(tf){
+  let euler=await this.tflib.toEuler(tf[0]);
   let tarr=[euler[0].toFixed(3),euler[1].toFixed(3),euler[2].toFixed(3)]
   let rarr=[euler[3].toFixed(3),euler[4].toFixed(3),euler[5].toFixed(3)]
   return "("+tarr.concat(rarr).join(",")+")(7,0)";
 }
+protocol.delim="\n";
+protocol.lf="\n";
 
 module.exports=protocol;
 
