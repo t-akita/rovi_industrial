@@ -1,0 +1,40 @@
+ Program
+   Robot Program
+     MoveJ
+       Home
+       X_recipe≔"TP00"
+       Script: X3.script
+     Loop 3 times
+       Script: X0.script
+       X_error≔ True 
+       Loop X_error
+         Script: X0.script
+         'MoveJ'
+         MoveJ
+           capture1
+           Wait: 0.5
+           Script: X1.script
+         Script: X2.script
+         If X_error
+           Popup
+       Base_var≔X_var
+       'Halt'
+       MoveL
+         dive_to
+         close_to_1
+         touch_1
+         Wait: 0.5
+         release_1
+         go_up_1
+       MoveJ
+         Wait: 1.0
+         Home
+     Halt
+     Manual operation
+       MoveJ
+         master0
+       Base_var≔Base
+       Script: X1.script
+       Script: X2.script
+       X_recipe≔"Brg2"
+       Script: X3.script
