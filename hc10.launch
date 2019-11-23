@@ -1,0 +1,17 @@
+<launch>
+  <include file="$(find motoman_hc10_support)/launch/load_hc10.launch" />
+<!--  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />  -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+  <arg name="robot_ip" />
+  <arg name="controller"/>
+  <rosparam command="load" file="$(find motoman_hc10_support)/config/joint_names_hc10.yaml" />
+<!--
+  <include file="$(find motoman_driver)/launch/robot_interface_streaming_$(arg controller).launch">
+    <arg name="robot_ip" value="$(arg robot_ip)" />
+  </include>
+  <node pkg="rovi_industrial" type="r_socket.js" name="" output="screen">
+    <param name="/config/rsocket/protocol" type="str" value="yas" />
+  </node>
+-->
+</launch>
+
