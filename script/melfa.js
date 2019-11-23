@@ -11,6 +11,8 @@ protocol.encode=async function(tf){
   let rarr=[euler[3].toFixed(3),euler[4].toFixed(3),euler[5].toFixed(3)]
   return "("+tarr.concat(rarr).join(",")+")(7,0)";
 }
+protocol.delim="\n";
+protocol.lf="\n";
 
 protocol.delim="\n";
 protocol.lf="\n";

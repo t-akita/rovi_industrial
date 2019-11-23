@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-const parser=require('./rparser');
-
 module.exports={
 //let protocol={
   encode:async function(tf){
@@ -12,19 +10,20 @@ module.exports={
   },
   decode:async function(msg){
     const who=this;
-    try{
-      let euler=parser.parse(msg);
-      let tfs=[];
-      for(let i=0;i<euler.length;i++){
-        let tf=await who.tflib.fromEuler(euler[i]);
+    let ary=msg.replace(/\).*/g, ']').replace(/.*\(/, '[').replace(/;/, '],[').replace(/E\+/g, 'E').replace(/\+/g, '');
+    ary=JSON.parse('['+ary+']');
+    let tfs=[];
+    for(let i=0;i<ary.length;i++){
+      let a=ary[i];
+      if(a.length>=6){
+        let tf=await who.tflib.fromEuler(a);
         tfs.push(tf);
       }
-      return tfs;
+      else{
+        tfs.push(a);
+      }
     }
-    catch(e){
-      console.log('protocol::'+e);
-      return [];
-    }
+    return tfs;
   },
   tflib:null,
   delim:"\n",

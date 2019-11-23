@@ -6,9 +6,11 @@ const EventEmitter=require('events').EventEmitter;
 module.exports={
   tf_euler: null,
   emitter: null,
+  option:'rxyz rad',
   set: function(arg){
     if(this.tf_euler==null){
       const who=this;
+      this.option=arg;
       this.emitter=new EventEmitter();
       Object.assign(process.env,{stdio:['pipe','pipe',2]})
       this.tf_euler=popen.exec('tf_euler.py '+arg,{env:process.env});
