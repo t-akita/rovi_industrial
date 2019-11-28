@@ -12,23 +12,6 @@ protocol.encode=async function(tf){
   return "("+tarr.concat(rarr).join(",")+")";
 }
 
-protocol.decode=async function(msg){
-  let ary=msg.replace(/\).*/g, ']').replace(/.*\(/, '[').replace(/;/, '],[').replace(/E\+/g, 'E').replace(/\+/g, '');
-  ary=JSON.parse('['+ary+']');
-  let tfs=[];
-  for(let i=0;i<ary.length;i++){
-    let a=ary[i];
-    if(a.length>=6){
-      let tf=await who.tflib.fromEuler(a);
-      tfs.push(tf);
-    }
-    else{
-      tfs.push(a);
-    }
-  }
-  return tfs;
-}
-
 protocol.delim="\n";
 protocol.lf="\r\n";
 
