@@ -102,7 +102,7 @@ setImmediate(async function(){
   function respNG(conn,err,delim,lf){
     let l1='NG'+delim;
     let l2=''+err+lf;
-    if(delim=="\n"){ conn.write(l1); conn.write(l2);}
+    if(delim==lf){ conn.write(l1); conn.write(l2);}
     else conn.write(l1+l2);
   }
   const server = net.createServer(function(conn){
@@ -220,7 +220,7 @@ setImmediate(async function(){
             ros.log.info("rsocket encode:"+cod);
             let l1='OK'+protocol.delim;
             let l2=cod+protocol.lf;
-            if(protocol.delim=="\n"){ conn.write(l1); conn.write(l2);}
+            if(protocol.delim==protocol.lf){ conn.write(l1); conn.write(l2);}
             else conn.write(l1+l2);
             return;
           }
@@ -242,7 +242,7 @@ setImmediate(async function(){
               ros.log.info("rsocket encode:"+cod);
               let l1='OK'+protocol.delim;
               let l2=cod+protocol.lf;
-              if(protocol.delim=="\n"){ conn.write(l1); conn.write(l2);}
+              if(protocol.delim==protocol.lf){ conn.write(l1); conn.write(l2);}
               else conn.write(l1+l2);
             }
             else{
