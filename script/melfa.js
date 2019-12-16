@@ -14,5 +14,8 @@ protocol.encode=async function(tf){
 protocol.delim="\n";
 protocol.lf="\n";
 
+protocol.delim="\n";
+protocol.lf="\n";
+
 module.exports=protocol;
 
