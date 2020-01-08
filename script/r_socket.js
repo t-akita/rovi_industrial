@@ -137,6 +137,7 @@ setImmediate(async function(){
       }
       else if(msg.startsWith('X1')){//--------------------[X1] ROVI_CAPTURE
         let tfs=await protocol.decode(msg.substr(2).trim());
+        let t0=ros.Time.now();
         if(tfs.length>0)
           ros.log.warn("rsocket::tf parse "+JSON.stringify(tfs));
         else ros.log.warn("rsocket::tf parse nothing");
@@ -163,13 +164,15 @@ setImmediate(async function(){
         emitter.once('capture',function(ret){
           clearTimeout(wdt);
           wdt=null;
-          ros.log.info("rsocket::capture done "+ret);
+          let t1=ros.Time.now();
+          ros.log.info("rsocket::capture done "+ret+" "+(ros.Time.toSeconds(t1)-ros.Time.toSeconds(t0)));
           if(ret) conn.write('OK'+protocol.lf);
           else respNG(conn,912,protocol.delim,protocol.lf); //failed to capture
         });
       }
       else if(msg.startsWith('X2')){//--------------------[X2] ROVI_SOLVE
         let tfs=protocol.decode(msg.substr(2).trim());
+        let t0=ros.Time.now();
         if(tfs.length>0){
           const path=new geometry_msgs.PoseArray();
           path.header.frame_id=Config.base_frame_id;
@@ -200,7 +203,8 @@ setImmediate(async function(){
         emitter.once('solve',function(ret){
           clearTimeout(wdt);
           wdt=null;
-          ros.log.info("rsocket::solve done "+ret);
+          let t1=ros.Time.now();
+          ros.log.info("rsocket::solve done "+ret+" "+(ros.Time.toSeconds(t1)-ros.Time.toSeconds(t0)));
           if(!ret){
             respNG(conn,922,protocol.delim,protocol.lf); //failed to solve
             return;
