@@ -105,11 +105,12 @@ setImmediate(async function(){
     if(delim==lf){ conn.write(l1); conn.write(l2);}
     else conn.write(l1+l2);
   }
+  let TX1;
   const server = net.createServer(function(conn){
     conn.setTimeout(Config.socket_timeout*1000);
     let msg='';
     let wdt=null;
-    let stat
+    let stat;
     conn.on('data',async function(data){
       stat_out(true);
       msg+=data.toString();
@@ -136,8 +137,18 @@ setImmediate(async function(){
         conn.write('OK'+protocol.lf);
       }
       else if(msg.startsWith('X1')){//--------------------[X1] ROVI_CAPTURE
-        let tfs=await protocol.decode(msg.substr(2).trim());
+        let tfs;
+        try{
+          tfs=await protocol.decode(msg.substr(2).trim());
+        }
+        catch(e){
+          ros.log.error('r_socket::pose decode error '+e);
+          protocol.reboot();
+          respNG(conn,999,protocol.delim,protocol.lf); //capture timeout
+          return;
+        }
         let t0=ros.Time.now();
+        TX1=t0;
         if(tfs.length>0)
           ros.log.warn("rsocket::tf parse "+JSON.stringify(tfs));
         else ros.log.warn("rsocket::tf parse nothing");
@@ -204,7 +215,9 @@ setImmediate(async function(){
           clearTimeout(wdt);
           wdt=null;
           let t1=ros.Time.now();
-          ros.log.info("rsocket::solve done "+ret+" "+(ros.Time.toSeconds(t1)-ros.Time.toSeconds(t0)));
+          let tx2=ros.Time.toSeconds(t1)-ros.Time.toSeconds(t0);
+          let tx12=ros.Time.toSeconds(t1)-ros.Time.toSeconds(TX1);
+          ros.log.info("rsocket::solve done "+ret+" "+tx2+" "+tx12);
           if(!ret){
             respNG(conn,922,protocol.delim,protocol.lf); //failed to solve
             return;
@@ -242,7 +255,16 @@ setImmediate(async function(){
           emitter.once('tf_transform',async function(tf){
             ros.log.info("rsocket tf:"+JSON.stringify(tf));
             if(tf.hasOwnProperty('translation')){
-              let cod=await protocol.encode([tf]);
+              let cod;
+              try{
+                cod=await protocol.encode([tf]);
+              }
+              catch(e){
+                ros.log.error('r_socket::pose encode error '+e);
+                protocol.reboot();
+                respNG(conn,999,protocol.delim,protocol.lf);
+                return;
+              }
               ros.log.info("rsocket encode:"+cod);
               let l1='OK'+protocol.delim;
               let l2=cod+protocol.lf;

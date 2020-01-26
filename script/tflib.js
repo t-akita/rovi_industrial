@@ -8,17 +8,17 @@ module.exports={
   emitter: null,
   option:'rxyz rad',
   set: function(arg){
-    if(this.tf_euler==null){
+//    if(this.tf_euler==null){
       const who=this;
-      this.option=arg;
+      if(arguments.length>=1) this.option=arg;
       this.emitter=new EventEmitter();
       Object.assign(process.env,{stdio:['pipe','pipe',2]})
-      this.tf_euler=popen.exec('tf_euler.py '+arg,{env:process.env});
+      this.tf_euler=popen.exec('tf_euler.py '+this.option,{env:process.env});
       this.tf_euler.stdout.on('data',function(data){
         let vec=JSON.parse("["+data+"]");
         who.emitter.emit('vector',vec);
       });
-    }
+//    }
     return this;
   },
   toRT: function(tf) {
