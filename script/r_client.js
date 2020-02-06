@@ -36,15 +36,6 @@ setImmediate(async function(){
   setTimeout(async function(){
     console.log("robot ip "+Config.robot_port+":"+Config.robot_ip);
     client.connect(Config.robot_port,Config.robot_ip);
-/* test code
-    console.log("IP "+Config.robot_port+" "+Config.robot_ip);
-    client.emit('data','P(10000,20000,30000,100000,200000,300000)\nJ(10000,20000,30000,100000,200000,300000)\n');
-    setTimeout(()=>{
-      client.emit('data','P(10000,20000,30000,100000,200000,300000)\nJ(10000,20000,30000,100000,200000,300000)\n');
-    },500);
-    let tf=[{"translation":{"x":0.01,"y":0.02,"z":0.03},"rotation":{"x":0.03813457647485015,"y":0.189307857412,"z":0.2392983377447303,"w":0.9515485246437886}}];
-    let enc=await protocol.encode(tf);
-    console.log("encd "+enc);*/
   },3000);
   client.on('connect', function(data) {
     console.log('r-joint::Connected');
