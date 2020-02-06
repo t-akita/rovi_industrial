@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 const net=require('net');
-const popen = require('child_process');
 const EventEmitter=require('events').EventEmitter;
 const ros=require('rosnodejs');
 const geometry_msgs=ros.require('geometry_msgs').msg;
 const sensor_msgs=ros.require('sensor_msgs').msg;
 const std_msgs=ros.require('std_msgs').msg;
+const utils_srvs=ros.require('rovi_utils').srv;
 let tf_lookup=null;
 
 let Config={
@@ -35,7 +35,7 @@ setImmediate(async function(){
   catch(e){
   }
   const protocol=require('./'+Config.protocol+'.js');
-
+  protocol.node(rosNode);
 //ROS events//////////////////
   rosNode.subscribe('/response/clear',std_msgs.Bool,async function(ret){
     emitter.emit('clear',ret.data);
@@ -56,6 +56,11 @@ setImmediate(async function(){
   const pub_solve=rosNode.advertise('/request/solve',std_msgs.Bool);
   const pub_recipe=rosNode.advertise('/request/recipe_load',std_msgs.String);
   const pub_path=rosNode.advertise('/request/path',geometry_msgs.PoseArray);
+  tf_lookup=rosNode.serviceClient('/tf_lookup/query', utils_srvs.TextFilter, { persist: true });
+  if (!await rosNode.waitForService(tf_lookup.getService(), 2000)) {
+    ros.log.error('tf_lookup service not available');
+    return;
+  }
 //Function///////////////
   let reverse_frame_updater=null;
 //Rotate J7 by J6////////////////
@@ -105,11 +110,12 @@ setImmediate(async function(){
     if(delim==lf){ conn.write(l1); conn.write(l2);}
     else conn.write(l1+l2);
   }
+  let TX1;
   const server = net.createServer(function(conn){
     conn.setTimeout(Config.socket_timeout*1000);
     let msg='';
     let wdt=null;
-    let stat
+    let stat;
     conn.on('data',async function(data){
       stat_out(true);
       msg+=data.toString();
@@ -120,8 +126,11 @@ setImmediate(async function(){
         tf.header.stamp=ros.Time.now();
         tf.header.frame_id=Config.base_frame_id;
         tf.child_frame_id=Config.update_frame_id;
-        tf.transform=protocol.decode(msg.substr(2));
-        if(tf.transform!=null) pub_tf.publish(tf);
+        let tfs=await protocol.decode(msg.substr(2));
+        if(tfs.length>0){
+          tf.transform=tfs[0];
+          pub_tf.publish(tf);
+        }
         return;
       }
       if(wdt!=null){
@@ -136,7 +145,17 @@ setImmediate(async function(){
         conn.write('OK'+protocol.lf);
       }
       else if(msg.startsWith('X1')){//--------------------[X1] ROVI_CAPTURE
-        let tfs=await protocol.decode(msg.substr(2).trim());
+        let tfs;
+        try{
+          tfs=await protocol.decode(msg.substr(2).trim());
+        }
+        catch(e){
+          ros.log.error('r_socket::pose decode error '+e);
+          respNG(conn,999,protocol.delim,protocol.lf); //capture timeout
+          return;
+        }
+        let t0=ros.Time.now();
+        TX1=t0;
         if(tfs.length>0)
           ros.log.warn("rsocket::tf parse "+JSON.stringify(tfs));
         else ros.log.warn("rsocket::tf parse nothing");
@@ -163,30 +182,14 @@ setImmediate(async function(){
         emitter.once('capture',function(ret){
           clearTimeout(wdt);
           wdt=null;
-          ros.log.info("rsocket::capture done "+ret);
+          let t1=ros.Time.now();
+          ros.log.info("rsocket::capture done "+ret+" "+(ros.Time.toSeconds(t1)-ros.Time.toSeconds(t0)));
           if(ret) conn.write('OK'+protocol.lf);
           else respNG(conn,912,protocol.delim,protocol.lf); //failed to capture
         });
       }
       else if(msg.startsWith('X2')){//--------------------[X2] ROVI_SOLVE
-        let tfs=protocol.decode(msg.substr(2).trim());
-        if(tfs.length>0){
-          const path=new geometry_msgs.PoseArray();
-          path.header.frame_id=Config.base_frame_id;
-          path.header.stamp=ros.Time.now();
-          tfs.forEach(function(t){
-            let p=new geometry_msgs.Pose();
-            p.position.x=t.translation.x;
-            p.position.y=t.translation.y;
-            p.position.z=t.translation.z;
-            p.orientation.x=t.rotation.x;
-            p.orientation.y=t.rotation.y;
-            p.orientation.z=t.rotation.z;
-            p.orientation.w=t.rotation.w;
-            path.poses.push(p);
-          });
-          pub_path.publish(path);
-        }
+        let t0=ros.Time.now();
         let f=new std_msgs.Bool();
         f.data=true;
         pub_solve.publish(f);
@@ -197,59 +200,54 @@ setImmediate(async function(){
           respNG(conn,921,protocol.delim,protocol.lf); //solve timeout
         },Config.solve_timeout*1000);
         emitter.removeAllListeners('solve');
-        emitter.once('solve',function(ret){
+        emitter.once('solve',async function(ret){
           clearTimeout(wdt);
           wdt=null;
-          ros.log.info("rsocket::solve done "+ret);
+          try{
+            let t1=ros.Time.now();
+            let tx2=ros.Time.toSeconds(t1)-ros.Time.toSeconds(t0);
+            let tx12=ros.Time.toSeconds(t1)-ros.Time.toSeconds(TX1);
+            ros.log.info("rsocket::solve done "+ret+" "+tx2+" "+tx12);
+          }
+          catch(err){ }
           if(!ret){
             respNG(conn,922,protocol.delim,protocol.lf); //failed to solve
             return;
           }
-/*
-          else{
-            ros.log.info("rsocket::solve ok");
-            let tf=new geometry_msgs.Transform();
-            tf.translation.x=1;
-            tf.translation.y=2;
-            tf.translation.z=3;
-            tf.rotation.x=0;
-            tf.rotation.y=0;
-            tf.rotation.z=0;
-            tf.rotation.w=1;
-            let cod=await protocol.encode([tf]);
-            ros.log.info("rsocket encode:"+cod);
-            let l1='OK'+protocol.delim;
-            let l2=cod+protocol.lf;
-            if(protocol.delim==protocol.lf){ conn.write(l1); conn.write(l2);}
-            else conn.write(l1+l2);
+          let req=new utils_srvs.TextFilter.Request();
+          req.data=Config.base_frame_id+' '+Config.source_frame_id+' '+Config.target_frame_id;
+          let res;
+          try{
+            res=await tf_lookup.call(req);
+          }
+          catch(err){
+            ros.log.error('tf_lookup call error');
+            respNG(conn,923,protocol.delim,protocol.lf); //failed to lookup
+          }
+          if(res.data.length==0){
+            ros.log.error('tf_lookup returned null');
+            respNG(conn,923,protocol.delim,protocol.lf); //failed to lookup
+          }
+          let tf=JSON.parse(res.data);
+          if(!tf.hasOwnProperty('translation')){
+            ros.log.error('tf_lookup returned but Transform');
+            respNG(conn,923,protocol.delim,protocol.lf); //failed to lookup
+          }
+          ros.log.info("rsocket tf:"+res.data);
+          let cod;
+          try{
+            cod=await protocol.encode([tf]);
+          }
+          catch(e){
+            ros.log.error('r_socket::pose encode error '+e);
+            respNG(conn,999,protocol.delim,protocol.lf);
             return;
           }
-*/
-          if(tf_lookup==null){
-            Object.assign(process.env,{stdio:['pipe','pipe',2]});
-            tf_lookup=popen.exec('tf_lookup.py',{env:process.env});
-            tf_lookup.stdout.on('data',function(data){
-              let tf=JSON.parse(data);
-              emitter.emit('tf_transform',tf);
-            });
-          }
-          ros.log.info("tf_lookup|"+Config.base_frame_id+' '+Config.source_frame_id+' '+Config.target_frame_id);
-          tf_lookup.stdin.write(Config.base_frame_id+' '+Config.source_frame_id+' '+Config.target_frame_id+'\n');
-          emitter.once('tf_transform',async function(tf){
-            ros.log.info("rsocket tf:"+JSON.stringify(tf));
-            if(tf.hasOwnProperty('translation')){
-              let cod=await protocol.encode([tf]);
-              ros.log.info("rsocket encode:"+cod);
-              let l1='OK'+protocol.delim;
-              let l2=cod+protocol.lf;
-              if(protocol.delim==protocol.lf){ conn.write(l1); conn.write(l2);}
-              else conn.write(l1+l2);
-            }
-            else{
-              ros.log.warn("rsocket tf error");
-              respNG(conn,923,protocol.delim,protocol.lf); //failed to lookup TF
-            }
-          });
+          ros.log.info("rsocket encode:"+cod);
+          let l1='OK'+protocol.delim;
+          let l2=cod+protocol.lf;
+          if(protocol.delim==protocol.lf){ conn.write(l1); conn.write(l2);}
+          else conn.write(l1+l2);
         });
       }
       else if(msg.startsWith('X3')){//--------------------[X3] ROVI_RECIPE
