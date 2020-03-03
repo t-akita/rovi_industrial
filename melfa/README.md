@@ -7,11 +7,6 @@ Melfaドライバを導入
 ~~~
 apt install ros-kinetic-melfa-robot
 ~~~
-melfa_robotリポジトリをclone
-~~~
-git clone https://github.com/tork-a/melfa_robot.git
-~~~
-catkin_makeにてBuild
 
 ## Launch  
 Launchする前に、ロボットのアドレスをパラメータの/melfa_robot/robot_ipにセットしておく。

@@ -1,8 +1,6 @@
 <launch>
-  <include file="$(find motoman_hc10_support)/launch/load_hc10.launch" />
-  <param name="use_gui" value="true" />
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find rovi_industrial)/motoman/urdf/hc10.xacro'" />
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-  <rosparam command="load" file="$(find motoman_hc10_support)/config/joint_names_hc10.yaml" />
   <node pkg="rovi_utils" type="tf_euler.py" name="" />
   <node pkg="rovi_utils" type="tf_lookup.py" name="" />
   <param name="/config/rsocket/protocol" type="str" value="motoman" />
