@@ -1,11 +1,7 @@
 #!/usr/bin/env node
 
 const tflib=require('./tflib');
-<<<<<<< HEAD
 tflib.option='sxyz deg';
-=======
-tflib.set('sxyz deg');
->>>>>>> 372b85fa035bc1c19af8c82e742400ca4b232790
 
 const protocol=require('./protocol');
 protocol.tflib=tflib;
