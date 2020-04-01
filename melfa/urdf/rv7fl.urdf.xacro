@@ -5,7 +5,7 @@
     <color rgba="1.0 1.0 1.0 1.0"/>
   </material>
 
-  <xacro:include filename="$(find rovi_industrial)/melfa/urdf/rv7fl.xacro"/>
+  <xacro:include filename="$(find melfa_description)/urdf/rv7fl.xacro"/>
 
   <link name="base_link"/>
   
