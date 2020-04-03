@@ -7,9 +7,9 @@
 - rovi_industrial(develブランチ)
 
 ## インストール  
-ROS industrialが未インスートルであれば、以下にてインストールします
+以下にてインストールします
 ~~~
-apt-get install ros-melodic-industrial-core
+apt-get install ros-kinetic-melfa-robot
 ~~~
 3Dモデルは[YOODS/melfa..](https://github.com/YOODS/melfa_robot)にあります。catkin_ws/srcにて以下を実行します。
 ~~~
