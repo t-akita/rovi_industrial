@@ -1,5 +1,7 @@
 <launch>
 <!-- <rosparam command="load" file="$(find rovi_industrial)/config.yaml" /> -->
+  <node pkg="rovi_utils" type="tf_euler.py" name="" output="screen" />
+  <node pkg="rovi_utils" type="tf_lookup.py" name="" output="screen" />
   <node pkg="rovi_industrial" type="r_socket.js" name="" output="screen">
     <param name="/config/rsocket/protocol" type="str" value="kw" />
   </node>

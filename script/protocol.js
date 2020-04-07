@@ -3,27 +3,34 @@
 module.exports={
 //let protocol={
   encode:async function(tf){
-    let euler=await this.tflib.toEuler(tf[0]);
+    let vecs=await this.tflib.toEuler(tf);
+    let euler=vecs[0];
     let tarr=[euler[0].toFixed(6),euler[1].toFixed(6),euler[2].toFixed(6)]
     let rarr=[euler[3].toFixed(6),euler[4].toFixed(6),euler[5].toFixed(6)]
     return "["+tarr.concat(rarr).join(",")+"]";
   },
+  decode_:function(msg){
+    let jss=msg.replace(/\).*/g, ']').replace(/.*\(/, '[').replace(/;/, '],[').replace(/E\+/g, 'E').replace(/\+/g, '');
+    if(jss.length<=2) return [];
+    return JSON.parse('['+jss+']');
+  },
   decode:async function(msg){
-    const who=this;
-    let ary=msg.replace(/\).*/g, ']').replace(/.*\(/, '[').replace(/;/, '],[').replace(/E\+/g, 'E').replace(/\+/g, '');
-    ary=JSON.parse('['+ary+']');
-    let tfs=[];
-    for(let i=0;i<ary.length;i++){
-      let a=ary[i];
-      if(a.length>=6){
-        let tf=await who.tflib.fromEuler(a);
-        tfs.push(tf);
-      }
-      else{
-        tfs.push(a);
-      }
-    }
-    return tfs;
+    let ary=this.decode_(msg);
+    if(ary.length==0) return [];
+    return await this.tflib.fromEuler(ary);
+  },
+  joints:['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6'],
+  jdecode:function(msg){
+    let jnts=this.decode_(msg);
+    return jnts.map((jnt)=>{
+      if(jnt.length<this.joints.length) throw new Error("Joint number not enough");
+      return jnt.map(function(j){
+        return j*Math.PI/180;
+      });
+    }).slice(0,this.joints.length);
+  },
+  node:function(n){
+    this.tflib.connect(n);
   },
   tflib:null,
   delim:"\n",

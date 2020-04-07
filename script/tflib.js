@@ -1,23 +1,28 @@
 const ros=require('rosnodejs');
 const geometry_msgs=ros.require('geometry_msgs').msg;
-const popen = require('child_process');
-const EventEmitter=require('events').EventEmitter;
+const utils_srvs=ros.require('rovi_utils').srv;
 
 module.exports={
   tf_euler: null,
-  emitter: null,
+  node: null,
   option:'rxyz rad',
-  set: function(arg){
+  connect:async function(n){
+    const rosNode=this.node=n;
     if(this.tf_euler==null){
-      const who=this;
-      this.option=arg;
-      this.emitter=new EventEmitter();
-      Object.assign(process.env,{stdio:['pipe','pipe',2]})
-      this.tf_euler=popen.exec('tf_euler.py '+arg,{env:process.env});
-      this.tf_euler.stdout.on('data',function(data){
-        let vec=JSON.parse("["+data+"]");
-        who.emitter.emit('vector',vec);
-      });
+      this.tf_euler=rosNode.serviceClient('/tf_euler/query', utils_srvs.TextFilter, { persist: true });
+      if (!await rosNode.waitForService(this.tf_euler.getService(), 2000)) {
+        this.tf_euler=null;
+        ros.log.error('tf_euler service not available');
+        return;
+      }
+      let req = new utils_srvs.TextFilter.Request();
+      req.data=this.option;
+      try{
+        await this.tf_euler.call(req);
+      }
+      catch(err){
+        ros.log.error('tf_euler call error');
+      }
     }
     return this;
   },
@@ -73,32 +78,51 @@ module.exports={
     tf.translation.z=rt[2][3];
     return tf;
   },
-  toEuler: async function(tf){
-    const who=this;
-    return new Promise(function(resolve){
-      who.emitter.once('vector',function(v){
-        let vec=[tf.translation.x,tf.translation.y,tf.translation.z,v[0],v[1],v[2]];
-        resolve(vec);
-      });
-      who.tf_euler.stdin.write(tf.rotation.x+','+tf.rotation.y+','+tf.rotation.z+','+tf.rotation.w+'\n');
+  toEuler: async function(tfs){
+    let req=new utils_srvs.TextFilter.Request();
+    tfs.forEach(function(tf){
+      req.data+=tf.rotation.x+','+tf.rotation.y+','+tf.rotation.z+','+tf.rotation.w+'\n';
     });
+    req.data=req.data.trim();
+    let res;
+    try{
+      res=await this.tf_euler.call(req);
+    }
+    catch(err) {
+      ros.log.error('tf_euler call error');
+      return [];
+    }
+    let vecs=res.data.split('\n').map(function(v,i){
+      let tf=tfs[i];
+      let vec=[tf.translation.x,tf.translation.y,tf.translation.z];
+      return vec.concat(JSON.parse('['+v+']'));
+    });
+    return vecs;
   },
   fromEuler: async function(pos){
-    const who=this;
-    return new Promise(function(resolve){
-      who.emitter.once('vector',function(v){
+    let req = new utils_srvs.TextFilter.Request();
+    req.data=pos.map(function(p){ return p.slice(3).toString();}).join('\n');
+    let res;
+    try{
+      res=await this.tf_euler.call(req);
+      let tfs=res.data.split('\n').map(function(v,i){
         let tf=new geometry_msgs.Transform();
-        tf.translation.x=pos[0];
-        tf.translation.y=pos[1];
-        tf.translation.z=pos[2];
-        tf.rotation.x=v[0];
-        tf.rotation.y=v[1];
-        tf.rotation.z=v[2];
-        tf.rotation.w=v[3];
-        resolve(tf);
+        tf.translation.x=pos[i][0];
+        tf.translation.y=pos[i][1];
+        tf.translation.z=pos[i][2];
+        let elm=v.split(',');
+        tf.rotation.x=Number(elm[0]);
+        tf.rotation.y=Number(elm[1]);
+        tf.rotation.z=Number(elm[2]);
+        tf.rotation.w=Number(elm[3]);
+        return tf;
       });
-      who.tf_euler.stdin.write(pos[3]+','+pos[4]+','+pos[5]+'\n');
-    });
+      return tfs;
+    }
+    catch(err) {
+      ros.log.error('tf_euler call error');
+      return [];
+    }
   }
 };
 

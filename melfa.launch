@@ -4,7 +4,8 @@
     <arg name="robot_ip" value="$(arg address)" />
   </include>
 -->
-  <node pkg="rovi_industrial" type="r_socket.js" name="" output="screen">
-    <param name="/config/rsocket/protocol" type="str" value="melfa" />
-  </node>
+  <node pkg="rovi_utils" type="tf_euler.py" name="" output="screen" />
+  <node pkg="rovi_utils" type="tf_lookup.py" name="" output="screen" />
+  <param name="/config/rsocket/protocol" type="str" value="melfa" />
+  <node pkg="rovi_industrial" type="r_socket.js" name="" output="screen" />
 </launch>
