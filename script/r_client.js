@@ -42,7 +42,6 @@ setImmediate(async function(){
     let f=new std_msgs.Bool();
     cstat.data=true;
     pub_conn.publish(cstat);
-    client.write("GET\n");
   });
   let msg='';
   client.on('data',async function(data){
@@ -92,11 +91,6 @@ setImmediate(async function(){
       }
     }
     msg=msg.slice(last_rb+1);
-    if(msg.length==0){
-      setTimeout(function(){
-        client.write("GET\n");
-      },100);
-    }
   });
   client.on('close', function() {
   	ros.log.info('r_client::socket closed');

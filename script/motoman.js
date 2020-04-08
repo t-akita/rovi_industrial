@@ -9,7 +9,7 @@ protocol.tflib=tflib;
 protocol.encode=async function(tf){
   let vecs=await this.tflib.toEuler(tf);
   let euler=vecs[0];
-  let tarr=[Math.floor(euler[0]*1000000),Math.floor(euler[1]*1000000),Math.floor(euler[2]*1000000)]
+  let tarr=[Math.floor(euler[0]*1000),Math.floor(euler[1]*1000),Math.floor(euler[2]*1000)]
   let rarr=[Math.floor(euler[3]*10000),Math.floor(euler[4]*10000),Math.floor(euler[5]*10000)]
   return tarr.concat(rarr).join(",");
 }
@@ -17,9 +17,9 @@ protocol.decode=async function(msg){
   let ary=protocol.decode_(msg);
   if(ary.length==0) return [];
   ary=ary.map(function(a){
-    a[0]*=0.000001;
-    a[1]*=0.000001;
-    a[2]*=0.000001;
+    a[0]*=0.001;
+    a[1]*=0.001;
+    a[2]*=0.001;
     a[3]*=0.0001;
     a[4]*=0.0001;
     a[5]*=0.0001;

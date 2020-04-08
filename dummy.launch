@@ -1,7 +1,5 @@
 <launch>
-  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find rovi_industrial)/motoman/urdf/hc10.xacro'" />
-  <rosparam command="load" file="$(find motoman_hc10_support)/config/joint_names_hc10.yaml" />
-
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find rovi_industrial)/motoman/urdf/hc10dt.xacro'" />
   <param name="use_gui" value="true" />
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
