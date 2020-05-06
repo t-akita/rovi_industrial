@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const net=require('net');
+const ping=require('ping');
 const EventEmitter=require('events').EventEmitter;
 const ros=require('rosnodejs');
 const geometry_msgs=ros.require('geometry_msgs').msg;
@@ -36,6 +37,7 @@ setImmediate(async function(){
   }
   const protocol=require('./'+Config.protocol+'.js');
   protocol.node(rosNode);
+  if(protocol.autoclose==undefined) protocol.autoclose=false;
 //ROS events//////////////////
   rosNode.subscribe('/response/clear',std_msgs.Bool,async function(ret){
     emitter.emit('clear',ret.data);
@@ -56,6 +58,14 @@ setImmediate(async function(){
   const pub_solve=rosNode.advertise('/request/solve',std_msgs.Bool);
   const pub_recipe=rosNode.advertise('/request/recipe_load',std_msgs.String);
   const pub_path=rosNode.advertise('/request/path',geometry_msgs.PoseArray);
+  rosNode.subscribe('/rsocket/ping',std_msgs.Bool,async function(ret){
+    let res = await ping.promise.probe(Config.robot_ip,{timeout:3});
+    if(res.alive){
+      let stat=new std_msgs.Bool();
+      stat.data=true;
+      pub_conn.publish(stat);
+    }
+  });
   tf_lookup=rosNode.serviceClient('/tf_lookup/query', utils_srvs.TextFilter, { persist: true });
   if (!await rosNode.waitForService(tf_lookup.getService(), 2000)) {
     ros.log.error('tf_lookup service not available');
@@ -143,6 +153,7 @@ setImmediate(async function(){
         f.data=true;
         pub_clear.publish(f);
         conn.write('OK'+protocol.lf);
+        if(protocol.autoclose) conn.destroy();
       }
       else if(msg.startsWith('X1')){//--------------------[X1] ROVI_CAPTURE
         let tfs;
@@ -152,6 +163,7 @@ setImmediate(async function(){
         catch(e){
           ros.log.error('r_socket::pose decode error '+e);
           respNG(conn,999,protocol.delim,protocol.lf); //capture timeout
+          if(protocol.autoclose) conn.destroy();
           return;
         }
         let t0=ros.Time.now();
@@ -177,6 +189,7 @@ setImmediate(async function(){
           emitter.removeAllListeners('capture');
           ros.log.warn("rsocket::capture timeout");
           respNG(conn,911,protocol.delim,protocol.lf); //capture timeout
+          if(protocol.autoclose) conn.destroy();
         },Config.capt_timeout*1000);
         emitter.removeAllListeners('capture');
         emitter.once('capture',function(ret){
@@ -186,6 +199,7 @@ setImmediate(async function(){
           ros.log.info("rsocket::capture done "+ret+" "+(ros.Time.toSeconds(t1)-ros.Time.toSeconds(t0)));
           if(ret) conn.write('OK'+protocol.lf);
           else respNG(conn,912,protocol.delim,protocol.lf); //failed to capture
+          if(protocol.autoclose) conn.destroy();
         });
       }
       else if(msg.startsWith('X2')){//--------------------[X2] ROVI_SOLVE
@@ -198,6 +212,7 @@ setImmediate(async function(){
           emitter.removeAllListeners('solve');
           ros.log.warn("rsocket::solve timeout");
           respNG(conn,921,protocol.delim,protocol.lf); //solve timeout
+          if(protocol.autoclose) conn.destroy();
         },Config.solve_timeout*1000);
         emitter.removeAllListeners('solve');
         emitter.once('solve',async function(ret){
@@ -212,6 +227,7 @@ setImmediate(async function(){
           catch(err){ }
           if(!ret){
             respNG(conn,922,protocol.delim,protocol.lf); //failed to solve
+            if(protocol.autoclose) conn.destroy();
             return;
           }
           let req=new utils_srvs.TextFilter.Request();
@@ -223,15 +239,18 @@ setImmediate(async function(){
           catch(err){
             ros.log.error('tf_lookup call error');
             respNG(conn,923,protocol.delim,protocol.lf); //failed to lookup
+            if(protocol.autoclose) conn.destroy();
           }
           if(res.data.length==0){
             ros.log.error('tf_lookup returned null');
             respNG(conn,923,protocol.delim,protocol.lf); //failed to lookup
+            if(protocol.autoclose) conn.destroy();
           }
           let tf=JSON.parse(res.data);
           if(!tf.hasOwnProperty('translation')){
             ros.log.error('tf_lookup returned but Transform');
             respNG(conn,923,protocol.delim,protocol.lf); //failed to lookup
+            if(protocol.autoclose) conn.destroy();
           }
           ros.log.info("rsocket tf:"+res.data);
           let cod;
@@ -241,6 +260,7 @@ setImmediate(async function(){
           catch(e){
             ros.log.error('r_socket::pose encode error '+e);
             respNG(conn,999,protocol.delim,protocol.lf);
+            if(protocol.autoclose) conn.destroy();
             return;
           }
           ros.log.info("rsocket encode:"+cod);
@@ -248,6 +268,7 @@ setImmediate(async function(){
           let l2=cod+protocol.lf;
           if(protocol.delim==protocol.lf){ conn.write(l1); conn.write(l2);}
           else conn.write(l1+l2);
+          if(protocol.autoclose) conn.destroy();
         });
       }
       else if(msg.startsWith('X3')){//--------------------[X3] ROVI_RECIPE
@@ -260,6 +281,7 @@ setImmediate(async function(){
           emitter.removeAllListeners('recipe');
           ros.log.warn("rsocket::recipe timeout");
           respNG(conn,931,protocol.delim,protocol.lf);
+          if(protocol.autoclose) conn.destroy();
         },Config.recipe_timeout*1000);
         emitter.removeAllListeners('recipe');
         emitter.once('recipe',function(ret){
@@ -268,6 +290,7 @@ setImmediate(async function(){
           ros.log.info("rsocket::recipe done "+ret);
           if(ret) conn.write('OK'+protocol.lf);
           else respNG(conn,932,protocol.delim,protocol.lf);
+          if(protocol.autoclose) conn.destroy();
         });
       }
       else if(msg.startsWith('J6')){
