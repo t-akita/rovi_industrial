@@ -34,7 +34,8 @@ module.exports={
   },
   tflib:null,
   delim:"\n",
-  lf:"\n"
+  lf:"\n",
+  autoclose:false
 }
 
 /*

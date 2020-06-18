@@ -1,20 +1,30 @@
 #!/usr/bin/env node
 
 const tflib=require('./tflib');
-tflib.option='sxyz deg';
+tflib.option='rzyx deg';
 
 const protocol=require('./protocol');
 protocol.tflib=tflib;
 
+function zeropad(N){
+    return (N.toFixed(3)+'00000').slice(10);
+}
 protocol.encode=async function(tf){
   let vecs=await this.tflib.toEuler(tf);
   let euler=vecs[0];
-  let tarr=[euler[0].toFixed(3),euler[1].toFixed(3),euler[2].toFixed(3)]
-  let rarr=[euler[3].toFixed(3),euler[4].toFixed(3),euler[5].toFixed(3)]
-  return tarr.concat(rarr).join(",");
+  return euler.map(function(N){
+        return (N.toFixed(3)+'0000000').slice(0,10);
+  }).join(",");
 }
 protocol.decode=async function(msg){
   let ary=protocol.decode_(msg);
+  if(ary.length==0) return [];
+//  ary=ary.map(function(a){
+//    let z=a[3];
+//    a[3]=a[5];
+//    a[5]=z;
+//    return a;
+//  });
   return await this.tflib.fromEuler(ary);
 }
 protocol.jdecode=function(msg){
@@ -29,6 +39,7 @@ protocol.jdecode=function(msg){
 
 protocol.delim=",";
 protocol.lf="\n";
+protocol.autoclose=true;
 protocol.joints=['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6'];
 
 module.exports=protocol;

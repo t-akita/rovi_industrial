@@ -37,7 +37,6 @@ setImmediate(async function(){
   }
   const protocol=require('./'+Config.protocol+'.js');
   protocol.node(rosNode);
-  if(protocol.autoclose==undefined) protocol.autoclose=false;
 //ROS events//////////////////
   rosNode.subscribe('/response/clear',std_msgs.Bool,async function(ret){
     emitter.emit('clear',ret.data);
@@ -114,11 +113,26 @@ setImmediate(async function(){
   }
 
 //Socket events//////////////////
-  function respNG(conn,err,delim,lf){
-    let l1='NG'+delim;
-    let l2=''+err+lf;
-    if(delim==lf){ conn.write(l1); conn.write(l2);}
+  function respNG(conn,proto,err){
+    let l1='NG'+proto.delim;
+    let l2=''+err+proto.lf;
+    if(proto.delim==proto.lf){ conn.write(l1); conn.write(l2);}
     else conn.write(l1+l2);
+    if(proto.autoclose) conn.destroy();
+  }
+  function respOK(conn,proto,cod){
+    switch(arguments.length){
+    case 2:
+      conn.write('OK'+proto.lf);
+      break;
+    case 3:
+      let l1='OK'+proto.delim;
+      let l2=cod+proto.lf;
+      if(proto.delim==proto.lf){ conn.write(l1); conn.write(l2);}
+      else conn.write(l1+l2);
+      break;
+    }
+    if(proto.autoclose) conn.destroy();
   }
   let TX1;
   const server = net.createServer(function(conn){
@@ -145,15 +159,14 @@ setImmediate(async function(){
       }
       if(wdt!=null){
         ros.log.warn("rsocket::Xcmd busy");
-        respNG(conn,900,protocol.delim,protocol.lf); //busy
+        respNG(conn,protocol,900); //busy
         return;
       }
       if(msg.startsWith('X0')){//--------------------[X0] ROVI_CLEAR
         let f=new std_msgs.Bool();
         f.data=true;
         pub_clear.publish(f);
-        conn.write('OK'+protocol.lf);
-        if(protocol.autoclose) conn.destroy();
+        respOK(conn,protocol);
       }
       else if(msg.startsWith('X1')){//--------------------[X1] ROVI_CAPTURE
         let tfs;
@@ -162,8 +175,7 @@ setImmediate(async function(){
         }
         catch(e){
           ros.log.error('r_socket::pose decode error '+e);
-          respNG(conn,999,protocol.delim,protocol.lf); //capture timeout
-          if(protocol.autoclose) conn.destroy();
+          respNG(conn,protocol,999); //capture timeout
           return;
         }
         let t0=ros.Time.now();
@@ -188,8 +200,7 @@ setImmediate(async function(){
           wdt=null;
           emitter.removeAllListeners('capture');
           ros.log.warn("rsocket::capture timeout");
-          respNG(conn,911,protocol.delim,protocol.lf); //capture timeout
-          if(protocol.autoclose) conn.destroy();
+          respNG(conn,protocol,911); //capture timeout
         },Config.capt_timeout*1000);
         emitter.removeAllListeners('capture');
         emitter.once('capture',function(ret){
@@ -197,9 +208,8 @@ setImmediate(async function(){
           wdt=null;
           let t1=ros.Time.now();
           ros.log.info("rsocket::capture done "+ret+" "+(ros.Time.toSeconds(t1)-ros.Time.toSeconds(t0)));
-          if(ret) conn.write('OK'+protocol.lf);
-          else respNG(conn,912,protocol.delim,protocol.lf); //failed to capture
-          if(protocol.autoclose) conn.destroy();
+          if(ret) respOK(conn,protocol);
+          else respNG(conn,protocol,912); //failed to capture
         });
       }
       else if(msg.startsWith('X2')){//--------------------[X2] ROVI_SOLVE
@@ -211,8 +221,7 @@ setImmediate(async function(){
           wdt=null;
           emitter.removeAllListeners('solve');
           ros.log.warn("rsocket::solve timeout");
-          respNG(conn,921,protocol.delim,protocol.lf); //solve timeout
-          if(protocol.autoclose) conn.destroy();
+          respNG(conn,protocol,921); //solve timeout
         },Config.solve_timeout*1000);
         emitter.removeAllListeners('solve');
         emitter.once('solve',async function(ret){
@@ -226,8 +235,7 @@ setImmediate(async function(){
           }
           catch(err){ }
           if(!ret){
-            respNG(conn,922,protocol.delim,protocol.lf); //failed to solve
-            if(protocol.autoclose) conn.destroy();
+            respNG(conn,protocol,922); //failed to solve
             return;
           }
           let req=new utils_srvs.TextFilter.Request();
@@ -238,19 +246,16 @@ setImmediate(async function(){
           }
           catch(err){
             ros.log.error('tf_lookup call error');
-            respNG(conn,923,protocol.delim,protocol.lf); //failed to lookup
-            if(protocol.autoclose) conn.destroy();
+            respNG(conn,protocol,923); //failed to lookup
           }
           if(res.data.length==0){
             ros.log.error('tf_lookup returned null');
-            respNG(conn,923,protocol.delim,protocol.lf); //failed to lookup
-            if(protocol.autoclose) conn.destroy();
+            respNG(conn,protocol,923); //failed to lookup
           }
           let tf=JSON.parse(res.data);
           if(!tf.hasOwnProperty('translation')){
             ros.log.error('tf_lookup returned but Transform');
-            respNG(conn,923,protocol.delim,protocol.lf); //failed to lookup
-            if(protocol.autoclose) conn.destroy();
+            respNG(conn,protocol,923); //failed to lookup
           }
           ros.log.info("rsocket tf:"+res.data);
           let cod;
@@ -259,16 +264,11 @@ setImmediate(async function(){
           }
           catch(e){
             ros.log.error('r_socket::pose encode error '+e);
-            respNG(conn,999,protocol.delim,protocol.lf);
-            if(protocol.autoclose) conn.destroy();
+            respNG(conn,protocol,999);
             return;
           }
           ros.log.info("rsocket encode:"+cod);
-          let l1='OK'+protocol.delim;
-          let l2=cod+protocol.lf;
-          if(protocol.delim==protocol.lf){ conn.write(l1); conn.write(l2);}
-          else conn.write(l1+l2);
-          if(protocol.autoclose) conn.destroy();
+          respOK(conn,protocol,cod);
         });
       }
       else if(msg.startsWith('X3')){//--------------------[X3] ROVI_RECIPE
@@ -280,17 +280,15 @@ setImmediate(async function(){
           wdt=null;
           emitter.removeAllListeners('recipe');
           ros.log.warn("rsocket::recipe timeout");
-          respNG(conn,931,protocol.delim,protocol.lf);
-          if(protocol.autoclose) conn.destroy();
+          respNG(conn,protocol,931);
         },Config.recipe_timeout*1000);
         emitter.removeAllListeners('recipe');
         emitter.once('recipe',function(ret){
           clearTimeout(wdt);
           wdt=null;
-          ros.log.info("rsocket::recipe done "+ret);
-          if(ret) conn.write('OK'+protocol.lf);
-          else respNG(conn,932,protocol.delim,protocol.lf);
-          if(protocol.autoclose) conn.destroy();
+          ros.log.info("rsocket::recipe done "+ret);          
+          if(ret) respOK(conn,protocol);
+          else respNG(conn,protocol,932);
         });
       }
       else if(msg.startsWith('J6')){
@@ -311,9 +309,8 @@ setImmediate(async function(){
     conn.on('timeout',function(){
       emitter.removeAllListeners();
       ros.log.warn('rsocket TIMEOUT');
-      conn.write("NG"+protocol.delim); //Request timeout
-      conn.write("408\n");
-      conn.destroy();
+      respNG(conn,protocol,408);
+      if(!protocol.autoclose) conn.destroy();
     });
     conn.on('error', function(err){
       ros.log.warn('Net:socket error '+err);
