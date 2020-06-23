@@ -166,7 +166,9 @@ setImmediate(async function(){
         let f=new std_msgs.Bool();
         f.data=true;
         pub_clear.publish(f);
-        respOK(conn,protocol);
+        setTimeout(function(){
+            respOK(conn,protocol);
+        },100);
       }
       else if(msg.startsWith('X1')){//--------------------[X1] ROVI_CAPTURE
         let tfs;
