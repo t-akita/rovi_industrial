@@ -33,6 +33,7 @@ setImmediate(async function(){
 
   const client = new net.Socket();
   const cstat=new std_msgs.Bool();
+  let wdt=null;
   setTimeout(async function(){
     console.log("robot ip "+Config.robot_port+":"+Config.robot_ip);
     client.connect(Config.robot_port,Config.robot_ip);
@@ -42,9 +43,18 @@ setImmediate(async function(){
     let f=new std_msgs.Bool();
     cstat.data=true;
     pub_conn.publish(cstat);
+    wdt=setTimeout(function(){
+      client.destroy();
+    },3000);
   });
   let msg='';
   client.on('data',async function(data){
+    if(wdt!=null){
+      clearTimeout(wdt);
+      wdt=setTimeout(function(){
+        client.destroy();
+      },3000);
+    }
     let last_rb=0;
     msg+=data.toString();
     msg=msg.replace( /[\r\n]+/gm, "" );
@@ -96,6 +106,8 @@ setImmediate(async function(){
   	ros.log.info('r_client::socket closed');
     cstat.data=false;
     pub_conn.publish(cstat);
+    if(wdt!=null) clearTimeout(wdt);
+    wdt=null;
     setTimeout(function(){
       client.connect(Config.robot_port,Config.robot_ip);
     },5000);
