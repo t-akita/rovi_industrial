@@ -9,6 +9,7 @@ const sensor_msgs=ros.require('sensor_msgs').msg;
 const std_msgs=ros.require('std_msgs').msg;
 const utils_srvs=ros.require('rovi_utils').srv;
 let tf_lookup=null;
+let Xable=true;
 
 let Config={
   protocol:'fanuc',
@@ -49,6 +50,9 @@ setImmediate(async function(){
   });
   rosNode.subscribe('/response/recipe_load',std_msgs.Bool,async function(ret){
     emitter.emit('recipe',ret.data);
+  });
+  rosNode.subscribe('/rsocket/enable',std_msgs.Bool,async function(ret){
+    Xable=ret.data;
   });
   const pub_conn=rosNode.advertise('/rsocket/stat',std_msgs.Bool);
   const pub_tf=rosNode.advertise('/update/config_tf',geometry_msgs.TransformStamped);
@@ -298,6 +302,10 @@ setImmediate(async function(){
       if(wdt!=null){
         ros.log.warn("rsocket::Xcmd busy");
         respNG(conn,protocol,900); //busy
+        return;
+      }
+      if(!Xable){
+        respNG(conn,protocol,901);  //X command disabled
         return;
       }
       if(msg.startsWith('X012')){//--------------------[X012] CLEAR|CAPT|SOLVE

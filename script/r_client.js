@@ -26,24 +26,26 @@ setImmediate(async function(){
   protocol.node(rosNode);
   const pub_js=rosNode.advertise('/joint_states',sensor_msgs.JointState);
   const pub_tf=rosNode.advertise('/update/config_tf',geometry_msgs.TransformStamped);
-  const pub_conn=rosNode.advertise('/rjoint/stat',std_msgs.Bool);
+  const pub_conn=rosNode.advertise('/rsocket/enable',std_msgs.Bool);
   const joint=new sensor_msgs.JointState();
   joint.name=['joint_1_s', 'joint_2_l', 'joint_3_u', 'joint_4_r', 'joint_5_b', 'joint_6_t'];
   if(protocol.hasOwnProperty('joints')) joint.name=protocol.joints;
 
   const client = new net.Socket();
-  const cstat=new std_msgs.Bool();
   let wdt=null;
   setTimeout(async function(){
     console.log("robot ip "+Config.robot_port+":"+Config.robot_ip);
     client.connect(Config.robot_port,Config.robot_ip);
   },3000);
+  const cstat = new std_msgs.Bool();
+  setInterval(function(){
+    pub_conn.publish(cstat);
+  },1000);
   client.on('connect', function(data) {
     console.log('r-joint::Connected');
-    let f=new std_msgs.Bool();
     cstat.data=true;
-    pub_conn.publish(cstat);
     wdt=setTimeout(function(){
+      cstat.data=false;
       client.destroy();
     },3000);
   });
