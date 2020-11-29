@@ -19,17 +19,7 @@ def lookup(a,b):
     return None
   return aTb
 
-def cb_clear(msg):
-  global stj,jtr
-  try:
-    jtr.transform=tflib.fromRT(np.linalg.inv(tflib.toRT(stj.transform)))
-    broadcaster.sendTransform([stj,jtr])
-  except Exception:
-    print "revolve.py exception"
-
-def cb_update(msg):
-  global stj,jtr
-  print "revolve.py update"
+def cb_update():
   stj=lookup("camera/master0","camera/master0/journal")
   stj.header.frame_id="camera/capture0/solve0"
   stj.child_frame_id="camera/capture0/solve0/journal"
@@ -66,11 +56,11 @@ tfBuffer=tf2_ros.Buffer()
 listener=tf2_ros.TransformListener(tfBuffer)
 broadcaster=tf2_ros.StaticTransformBroadcaster()
 
-rospy.Subscriber("/response/solve",Bool,cb_update)
-rospy.Subscriber("/request/clear",Bool,cb_clear)
+sys.stdout.write("sys revolve.py started")
+sys.stdout.flush()
 
-print "revolve.py started"
-try:
-  rospy.spin()
-except KeyboardInterrupt:
-  print "Shutting down"
+while not rospy.is_shutdown():
+  line=sys.stdin.readline()
+  cb_update()
+  sys.stdout.write("revolve.py update")
+  sys.stdout.flush()

@@ -3,7 +3,7 @@
 const net=require('net');
 const ping=require('ping');
 const EventEmitter=require('events').EventEmitter;
-const popen = require('child_process');
+const exec=require('child_process').exec;
 const ros=require('rosnodejs');
 const geometry_msgs=ros.require('geometry_msgs').msg;
 const sensor_msgs=ros.require('sensor_msgs').msg;
@@ -47,8 +47,11 @@ setImmediate(async function(){
   rosNode.subscribe('/response/capture',std_msgs.Bool,async function(ret){
     emitter.emit('capture',ret.data);
   });
+  let postproc=null;
   rosNode.subscribe('/response/solve',std_msgs.Bool,async function(ret){
-    emitter.emit('solve',ret.data);
+    if(!ret.data) emitter.emit('solve',ret.data);
+    else if(postproc==null) emitter.emit('solve',ret.data);
+    else postproc.stdin.write('\n');
   });
   rosNode.subscribe('/response/recipe_load',std_msgs.Bool,async function(ret){
     emitter.emit('recipe',ret.data);
@@ -76,14 +79,12 @@ setImmediate(async function(){
     ros.log.error('tf_lookup service not available');
     return;
   }
-  let postproc=null;
-  if(Config.postproc!=''){
+  if(Config.post!=''){
     ros.log.info("Post processor start "+Config.post);
-    postproc=popen.exec(Config.post, { env:process.env },function(res){
-      ros.log.warn('post proccess terminated'+res);
-    });
-    postproc.stdout.on('data',function(data){
-      ros.log.info('r-socket post proc:' + data);
+    postproc=exec(Config.post);
+    postproc.stdout.on('data',(data)=>{
+      ros.log.info('r-socket proc:'+data);
+      emitter.emit('solve',true);
     });
   }
 //Function///////////////
