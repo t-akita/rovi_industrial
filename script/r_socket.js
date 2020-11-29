@@ -3,6 +3,7 @@
 const net=require('net');
 const ping=require('ping');
 const EventEmitter=require('events').EventEmitter;
+const popen = require('child_process');
 const ros=require('rosnodejs');
 const geometry_msgs=ros.require('geometry_msgs').msg;
 const sensor_msgs=ros.require('sensor_msgs').msg;
@@ -23,6 +24,7 @@ let Config={
   source_frame_id:'camera/master0',
   target_frame_id:'solve0',
   update_frame_id:'',
+  post:'',
   reverse_frame_id:'',
   reverse_direction:1
 };
@@ -73,6 +75,16 @@ setImmediate(async function(){
   if (!await rosNode.waitForService(tf_lookup.getService(), 2000)) {
     ros.log.error('tf_lookup service not available');
     return;
+  }
+  let postproc=null;
+  if(Config.postproc!=''){
+    ros.log.info("Post processor start "+Config.post);
+    postproc=popen.exec(Config.post, { env:process.env },function(res){
+      ros.log.warn('post proccess terminated'+res);
+    });
+    postproc.stdout.on('data',function(data){
+      ros.log.info('r-socket post proc:' + data);
+    });
   }
 //Function///////////////
   let reverse_frame_updater=null;
@@ -238,15 +250,18 @@ setImmediate(async function(){
         catch(err){
           ros.log.error('tf_lookup call error');
           respNG(conn,protocol,923); //failed to lookup
+          return;
         }
         if(res.data.length==0){
           ros.log.error('tf_lookup returned null');
           respNG(conn,protocol,923); //failed to lookup
+          return;
         }
         let tf=JSON.parse(res.data);
         if(!tf.hasOwnProperty('translation')){
           ros.log.error('tf_lookup returned but Transform');
           respNG(conn,protocol,923); //failed to lookup
+          return;
         }
         ros.log.info("rsocket tf:"+res.data);
         let cod;
