@@ -21,7 +21,7 @@ def cleanup_node():
 
 rospy.on_shutdown(cleanup_node)
 
-markers = rviz_tools.RvizMarkers('/camera', 'ycam_marker')
+markers = rviz_tools.RvizMarkers('camera', 'ycam_marker')
 
 while not rospy.is_shutdown():
   T = transformations.translation_matrix((0,0,0))
