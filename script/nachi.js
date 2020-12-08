@@ -12,6 +12,8 @@ function zeropad(N){
 protocol.encode=async function(tf){
   let vecs=await this.tflib.toEuler(tf);
   let euler=vecs[0];
+  console.log('encode'+vecs);
+//  if (euler[3]>70.) euler[3]=euler[3]-360;
   return euler.map(function(N){
     return (N.toFixed(3)+'0000000').slice(0,10);
   }).join(",");
@@ -23,7 +25,12 @@ protocol.decode=async function(msg){
 }
 protocol.jdecode=function(msg){
   let jnts=this.decode_(msg);
-  return jnts;
+  return jnts.map((jnt)=>{
+    if(jnt.length<this.joints.length) throw new Error("Joint number not enough");
+    return jnt.map(function(j){
+      return j*0.0001;
+    });
+  }).slice(0,this.joints.length);
 }
 
 protocol.delim=",";

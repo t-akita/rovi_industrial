@@ -24,7 +24,7 @@ let Config={
   source_frame_id:'camera/master0',
   target_frame_id:'solve0',
   update_frame_id:'',
-  post:'',
+  post:{'revolve':{'launch':'rosrun rovi_industrial'}},
   reverse_frame_id:'',
   reverse_direction:1
 };
@@ -51,7 +51,7 @@ setImmediate(async function(){
   rosNode.subscribe('/response/solve',std_msgs.Bool,async function(ret){
     if(!ret.data) emitter.emit('solve',ret.data);
     else if(postproc==null) emitter.emit('solve',ret.data);
-    else postproc.stdin.write('\n');
+    else Config.post[postproc].pid.stdin.write('\n');
   });
   rosNode.subscribe('/response/recipe_load',std_msgs.Bool,async function(ret){
     emitter.emit('recipe',ret.data);
@@ -78,14 +78,6 @@ setImmediate(async function(){
   if (!await rosNode.waitForService(tf_lookup.getService(), 2000)) {
     ros.log.error('tf_lookup service not available');
     return;
-  }
-  if(Config.post!=''){
-    ros.log.info("Post processor start "+Config.post);
-    postproc=exec(Config.post);
-    postproc.stdout.on('data',(data)=>{
-      ros.log.info('r-socket proc:'+data);
-      emitter.emit('solve',true);
-    });
   }
 //Function///////////////
   let reverse_frame_updater=null;
@@ -227,6 +219,14 @@ setImmediate(async function(){
         ros.log.warn("rsocket::solve timeout");
         respNG(conn,protocol,921); //solve timeout
       },Config.solve_timeout*1000);
+  if(Config.post!=''){
+    ros.log.info("Post processor start "+Config.post);
+    postproc=exec(Config.post);
+    postproc.stdout.on('data',(data)=>{
+      ros.log.info('r-socket proc:'+data);
+      emitter.emit('solve',true);
+    });
+  }
       emitter.removeAllListeners('solve');
       emitter.once('solve',async function(ret){
         clearTimeout(wdt);
