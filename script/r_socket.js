@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+let namespace='rsocket';
 const net=require('net');
 const ping=require('ping');
 const EventEmitter=require('events').EventEmitter;
@@ -24,16 +25,19 @@ let Config={
   source_frame_id:'camera/master0',
   target_frame_id:'solve0',
   update_frame_id:'',
-  post:{'revolve':{'launch':'rosrun rovi_industrial'}},
+  post:{'revolve':{'launch':'rosrun rovi_industrial revolve.py'}},
   reverse_frame_id:'',
   reverse_direction:1
+};
+let Param={
+  post:''
 };
 
 setImmediate(async function(){
   const emitter=new EventEmitter();
-  const rosNode=await ros.initNode('rsocket');
+  const rosNode=await ros.initNode(namespace);
   try{
-    let co=await rosNode.getParam('/config/rsocket');
+    let co=await rosNode.getParam('/config/'+namespace);
     Object.assign(Config,co);
   }
   catch(e){
@@ -47,26 +51,28 @@ setImmediate(async function(){
   rosNode.subscribe('/response/capture',std_msgs.Bool,async function(ret){
     emitter.emit('capture',ret.data);
   });
-  let postproc=null;
   rosNode.subscribe('/response/solve',std_msgs.Bool,async function(ret){
     if(!ret.data) emitter.emit('solve',ret.data);
-    else if(postproc==null) emitter.emit('solve',ret.data);
-    else Config.post[postproc].pid.stdin.write('\n');
+    else if(Config.post.hasOwnProperty(Param.post)){
+      console.log("postproc queue "+Param.post);
+      Config.post[Param.post].pid.stdin.write(Config.target_frame_id+'\n');
+    }
+    else emitter.emit('solve',ret.data);
   });
   rosNode.subscribe('/response/recipe_load',std_msgs.Bool,async function(ret){
     emitter.emit('recipe',ret.data);
   });
-  rosNode.subscribe('/rsocket/enable',std_msgs.Bool,async function(ret){
+  rosNode.subscribe(namespace+'/enable',std_msgs.Bool,async function(ret){
     Xable=ret.data;
   });
-  const pub_conn=rosNode.advertise('/rsocket/stat',std_msgs.Bool);
+  const pub_conn=rosNode.advertise(namespace+'/stat',std_msgs.Bool);
   const pub_tf=rosNode.advertise('/update/config_tf',geometry_msgs.TransformStamped);
   const pub_clear=rosNode.advertise('/request/clear',std_msgs.Bool);
   const pub_capture=rosNode.advertise('/request/capture',std_msgs.Bool);
   const pub_solve=rosNode.advertise('/request/solve',std_msgs.Bool);
   const pub_recipe=rosNode.advertise('/request/recipe_load',std_msgs.String);
   const pub_path=rosNode.advertise('/request/path',geometry_msgs.PoseArray);
-  rosNode.subscribe('/rsocket/ping',std_msgs.Bool,async function(ret){
+  rosNode.subscribe(namespace+'/ping',std_msgs.Bool,async function(ret){
     let res = await ping.promise.probe(Config.robot_ip,{timeout:3});
     if(res.alive){
       let stat=new std_msgs.Bool();
@@ -211,6 +217,23 @@ setImmediate(async function(){
     async function X2(){
       let t0=ros.Time.now();
       let f=new std_msgs.Bool();
+      try{
+        let obj=await rosNode.getParam(namespace);
+        Object.assign(Param,obj);
+        if(Config.post.hasOwnProperty(Param.post)){
+          let proc=Config.post[Param.post]
+          if(!proc.hasOwnProperty("pid")){
+            ros.log.info("r-socket launch postprocessor:"+proc.launch);
+            proc.pid=await exec(proc.launch);
+            proc.pid.stdout.on('data',(data)=>{
+              ros.log.info('r-socket postproc:'+data);
+              if(data.startsWith("OK")||data.startsWith("NG")) emitter.emit('solve',true);
+            });
+          }
+        }
+      }
+      catch(e){
+      }
       f.data=true;
       pub_solve.publish(f);
       wdt=setTimeout(function(){
@@ -219,14 +242,6 @@ setImmediate(async function(){
         ros.log.warn("rsocket::solve timeout");
         respNG(conn,protocol,921); //solve timeout
       },Config.solve_timeout*1000);
-  if(Config.post!=''){
-    ros.log.info("Post processor start "+Config.post);
-    postproc=exec(Config.post);
-    postproc.stdout.on('data',(data)=>{
-      ros.log.info('r-socket proc:'+data);
-      emitter.emit('solve',true);
-    });
-  }
       emitter.removeAllListeners('solve');
       emitter.once('solve',async function(ret){
         clearTimeout(wdt);
@@ -244,6 +259,7 @@ setImmediate(async function(){
         }
         let req=new utils_srvs.TextFilter.Request();
         req.data=Config.base_frame_id+' '+Config.source_frame_id+' '+Config.target_frame_id;
+        if(Param.post.length>0) req.data+='/'+Param.post;
         let res;
         try{
           res=await tf_lookup.call(req);

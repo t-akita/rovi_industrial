@@ -49,6 +49,7 @@ def cb_update():
   jtr.header.stamp=rospy.Time.now()
   jtr.transform=tflib.fromRT(jTr)
   broadcaster.sendTransform([stj,jtr])
+  return True
 
 ########################################################
 rospy.init_node('revolver',anonymous=True)
@@ -56,11 +57,13 @@ tfBuffer=tf2_ros.Buffer()
 listener=tf2_ros.TransformListener(tfBuffer)
 broadcaster=tf2_ros.StaticTransformBroadcaster()
 
-sys.stdout.write("sys revolve.py started")
+sys.stdout.write("//Start revolve.py")
 sys.stdout.flush()
 
 while not rospy.is_shutdown():
   line=sys.stdin.readline()
+  sys.stdout.write("//Do revolve")
+  sys.stdout.flush()
   cb_update()
-  sys.stdout.write("revolve.py update")
+  sys.stdout.write("OK revolve.py")
   sys.stdout.flush()
