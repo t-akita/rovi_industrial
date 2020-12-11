@@ -14,8 +14,12 @@ from scipy.spatial.transform import Rotation as R
 
 def lookup(a,b):
   try:
+    sys.stdout.write("//lookup "+a+" "+b+"\n")
+    sys.stdout.flush()
     aTb=tfBuffer.lookup_transform(a,b,rospy.Time(0))
   except (tf2_ros.LookupException,tf2_ros.ConnectivityException,tf2_ros.ExtrapolationException):
+    sys.stdout.write("//lookup exception\n")
+    sys.stdout.flush()
     return None
   return aTb
 
@@ -56,14 +60,14 @@ rospy.init_node('revolver',anonymous=True)
 tfBuffer=tf2_ros.Buffer()
 listener=tf2_ros.TransformListener(tfBuffer)
 broadcaster=tf2_ros.StaticTransformBroadcaster()
-
-sys.stdout.write("//Start revolve.py")
+rospy.sleep(2)
+sys.stdout.write("//Start revolve.py\n")
 sys.stdout.flush()
 
 while not rospy.is_shutdown():
   line=sys.stdin.readline()
-  sys.stdout.write("//Do revolve")
+  sys.stdout.write("//Do revolve\n")
   sys.stdout.flush()
   cb_update()
-  sys.stdout.write("OK revolve.py")
+  sys.stdout.write("OK revolve.py\n")
   sys.stdout.flush()

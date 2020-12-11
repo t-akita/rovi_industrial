@@ -135,6 +135,7 @@ setImmediate(async function(){
     else conn.write(l1+l2);
     if(proto.autoclose) conn.destroy();
     conn.x012=false;
+    stat_out(false);
   }
   function respOK(conn,proto,cod){
     switch(arguments.length){
@@ -150,6 +151,7 @@ setImmediate(async function(){
     }
     if(proto.autoclose) conn.destroy();
     conn.x012=false;
+    stat_out(false);
   }
   let TX1;
   const server = net.createServer(function(conn){
@@ -260,6 +262,7 @@ setImmediate(async function(){
         let req=new utils_srvs.TextFilter.Request();
         req.data=Config.base_frame_id+' '+Config.source_frame_id+' '+Config.target_frame_id;
         if(Param.post.length>0) req.data+='/'+Param.post;
+        console.log('tf lookup:'+req.data);
         let res;
         try{
           res=await tf_lookup.call(req);
@@ -315,10 +318,11 @@ setImmediate(async function(){
       });
     }
     conn.on('data',async function(data){
-      stat_out(true);
       msg+=data.toString();
       ros.log.info("rsocket "+msg+" "+data.toString());
       if(msg.indexOf('(')*msg.indexOf(')')<0) return;//until msg will like "??(???)"
+      //message received
+      stat_out(true);
       if(msg.startsWith('P1') && Config.update_frame_id.length>0){
         let tf=new geometry_msgs.TransformStamped();
         tf.header.stamp=ros.Time.now();
@@ -344,10 +348,10 @@ setImmediate(async function(){
         conn.x012=true;
         X0();
       }
-      else if(msg.startsWith('X0')) X0();//--------------------[X0] ROVI_CLEAR
-      else if(msg.startsWith('X1')) X1();//--------------------[X1] ROVI_CAPTURE
-      else if(msg.startsWith('X2')) X2();//--------------------[X2] ROVI_SOLVE
-      else if(msg.startsWith('X3')) X3();//--------------------[X3] ROVI_RECIPE
+      else if(msg.startsWith('X0')) X0();//[X0] ROVI_CLEAR
+      else if(msg.startsWith('X1')) X1();//[X1] ROVI_CAPTURE
+      else if(msg.startsWith('X2')) X2();//[X2] ROVI_SOLVE
+      else if(msg.startsWith('X3')) X3();//[X3] ROVI_RECIPE
       else if(msg.startsWith('J6')){
         let j6=await protocol.decode(msg.substr(2).trim());
         console.log("J6 "+j6[0][0])
@@ -367,9 +371,11 @@ setImmediate(async function(){
       emitter.removeAllListeners();
       ros.log.warn('rsocket TIMEOUT');
       respNG(conn,protocol,408);
+     stat_out(false);
     });
     conn.on('error', function(err){
       ros.log.warn('Net:socket error '+err);
+      stat_out(false);
     });
   }).listen(Config.port);
 });
