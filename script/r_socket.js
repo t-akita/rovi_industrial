@@ -26,8 +26,7 @@ let Config={
   update_frame_id:'',
   post:'',
   reverse_frame_id:'',
-  reverse_direction:1,
-  check_sum:'/searcher0/hash'
+  reverse_direction:1
 };
 
 setImmediate(async function(){
@@ -59,11 +58,6 @@ setImmediate(async function(){
   });
   rosNode.subscribe('/rsocket/enable',std_msgs.Bool,async function(ret){
     Xable=ret.data;
-  });
-  let master_hash=[0];
-  rosNode.subscribe(Config.check_sum,std_msgs.Int64,async function(ret){
-    master_hash.unshift(Number(ret.data));
-    if(master_hash.length>10) master_hash.pop();
   });
   const pub_conn=rosNode.advertise('/rsocket/stat',std_msgs.Bool);
   const pub_tf=rosNode.advertise('/update/config_tf',geometry_msgs.TransformStamped);
@@ -233,7 +227,6 @@ setImmediate(async function(){
         ros.log.warn("rsocket::solve timeout");
         respNG(conn,protocol,921); //solve timeout
       },Config.solve_timeout*1000);
-      let hash=master_hash[0];
       emitter.removeAllListeners('solve');
       emitter.once('solve',async function(ret){
         clearTimeout(wdt);
@@ -263,11 +256,6 @@ setImmediate(async function(){
         if(res.data.length==0){
           ros.log.error('tf_lookup returned null');
           respNG(conn,protocol,923); //failed to lookup
-          return;
-        }
-        if(hash!=master_hash[0]){
-          ros.log.error('master changed white solving '+hash+' '+master_hash[0]);
-          respNG(conn,protocol,924); //failed to solve
           return;
         }
         let tf=JSON.parse(res.data);
