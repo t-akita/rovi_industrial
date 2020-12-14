@@ -7,20 +7,24 @@ const protocol=require('./protocol');
 protocol.tflib=tflib;
 
 function zeropad(N){
-  return (N.toFixed(3)+'00000').slice(10);
+    return (N.toFixed(3)+'00000').slice(10);
 }
 protocol.encode=async function(tf){
   let vecs=await this.tflib.toEuler(tf);
   let euler=vecs[0];
-  console.log('encode'+vecs);
-//  if (euler[3]>70.) euler[3]=euler[3]-360;
   return euler.map(function(N){
-    return (N.toFixed(3)+'0000000').slice(0,10);
+        return (N.toFixed(3)+'0000000').slice(0,10);
   }).join(",");
 }
 protocol.decode=async function(msg){
   let ary=protocol.decode_(msg);
   if(ary.length==0) return [];
+//  ary=ary.map(function(a){
+//    let z=a[3];
+//    a[3]=a[5];
+//    a[5]=z;
+//    return a;
+//  });
   return await this.tflib.fromEuler(ary);
 }
 protocol.jdecode=function(msg){
