@@ -280,7 +280,7 @@ setImmediate(async function(){
         let tf=JSON.parse(res.data);
         if(!tf.hasOwnProperty('translation')){
           ros.log.error('tf_lookup returned but Transform');
-          respNG(conn,protocol,923); //failed to lookup
+          respNG(conn,protocol,925); //failed to lookup
           return;
         }
         ros.log.info("rsocket tf:"+res.data);
