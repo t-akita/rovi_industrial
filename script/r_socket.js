@@ -25,6 +25,7 @@ let Config={
   source_frame_id:'camera/master0',
   target_frame_id:'solve0',
   update_frame_id:'',
+  check_frame_id:'',
   post:{'revolve':{'launch':'rosrun rovi_industrial revolve.py'}},
   reverse_frame_id:'',
   reverse_direction:1
@@ -34,6 +35,7 @@ let Param={
 };
 
 setImmediate(async function(){
+  console.log("R-Socket "+process.argv.toString());
   const emitter=new EventEmitter();
   const rosNode=await ros.initNode(namespace);
   try{
@@ -62,10 +64,10 @@ setImmediate(async function(){
   rosNode.subscribe('/response/recipe_load',std_msgs.Bool,async function(ret){
     emitter.emit('recipe',ret.data);
   });
-  rosNode.subscribe(namespace+'/enable',std_msgs.Bool,async function(ret){
+  rosNode.subscribe('/rsocket/enable',std_msgs.Bool,async function(ret){
     Xable=ret.data;
   });
-  const pub_conn=rosNode.advertise(namespace+'/stat',std_msgs.Bool);
+  const pub_conn=rosNode.advertise('/rsocket/stat',std_msgs.Bool);
   const pub_tf=rosNode.advertise('/update/config_tf',geometry_msgs.TransformStamped);
   const pub_clear=rosNode.advertise('/request/clear',std_msgs.Bool);
   const pub_capture=rosNode.advertise('/request/capture',std_msgs.Bool);
@@ -153,6 +155,14 @@ setImmediate(async function(){
     conn.x012=false;
     stat_out(false);
   }
+  function tf_update(tf,id){
+    let stmp=new geometry_msgs.TransformStamped();
+    stmp.header.stamp=ros.Time.now();
+    stmp.header.frame_id='';
+    stmp.child_frame_id=id;
+    stmp.transform=tf;
+    return stmp;
+  }
   let TX1;
   const server = net.createServer(function(conn){
     conn.setTimeout(Config.socket_timeout*1000);
@@ -170,26 +180,20 @@ setImmediate(async function(){
       },100);
     }
     async function X1(){
+      let t0=ros.Time.now();
+      TX1=t0;
       let tfs;
       try{
         tfs=await protocol.decode(msg.substr(2).trim());
       }
       catch(e){
         ros.log.error('r_socket::pose decode error '+e);
-        respNG(conn,protocol,999); //capture timeout
+        respNG(conn,protocol,999); //decode error
         return;
       }
-      let t0=ros.Time.now();
-      TX1=t0;
-      if(tfs.length>0)
-        ros.log.warn("rsocket::tf parse "+JSON.stringify(tfs));
-      else ros.log.warn("rsocket::tf parse nothing");
-      if(tfs.length>0 && tfs[0].hasOwnProperty('translation') && Config.update_frame_id.length>0){
-        let tf=new geometry_msgs.TransformStamped();
-        tf.header.stamp=ros.Time.now();
-        tf.header.frame_id=Config.base_frame_id;
-        tf.child_frame_id=Config.update_frame_id;
-        tf.transform=tfs[0];
+      ros.log.warn("rsocket::X1 tf parse "+JSON.stringify(tfs));
+      if(tfs.length>0 && tfs[0].hasOwnProperty('translation') && Config.update_frame_id.length>0){        
+        let tf=tf_update(tfs[0],Config.update_frame_id);
         pub_tf.publish(tf);
       }
       setTimeout(function(){
@@ -218,7 +222,21 @@ setImmediate(async function(){
     }
     async function X2(){
       let t0=ros.Time.now();
-      let f=new std_msgs.Bool();
+      let tfs;
+      try{
+        tfs=await protocol.decode(msg.substr(2).trim());
+      }
+      catch(e){
+        ros.log.error('r_socket::pose decode error '+e);
+        respNG(conn,protocol,999); //decode error
+        return;
+      }
+      ros.log.warn("rsocket::X2 tf parse "+JSON.stringify(tfs));
+      if(tfs.length>0 && tfs[0].hasOwnProperty('translation') && Config.check_frame_id.length>0){
+        let tf=tf_update(tfs[0],Config.check_frame_id);
+        pub_tf.publish(tf);
+      }
+
       try{
         let obj=await rosNode.getParam(namespace);
         Object.assign(Param,obj);
@@ -236,6 +254,8 @@ setImmediate(async function(){
       }
       catch(e){
       }
+
+      let f=new std_msgs.Bool();
       f.data=true;
       pub_solve.publish(f);
       wdt=setTimeout(function(){
