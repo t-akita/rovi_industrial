@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 let namespace='rsocket';
-const net=require('net');
-const ping=require('ping');
+const net=require('net')
 const EventEmitter=require('events').EventEmitter;
 const exec=require('child_process').exec;
 const ros=require('rosnodejs');
@@ -55,6 +54,9 @@ setImmediate(async function(){
   });
   rosNode.subscribe('/response/solve',std_msgs.Bool,async function(ret){
     if(!ret.data) emitter.emit('solve',ret.data);
+    else if(typeof Config.post=="string"){
+      Config.post_pid.stdin.write(Config.target_frame_id+'\n');
+    }
     else if(Config.post.hasOwnProperty(Param.post)){
       console.log("postproc queue "+Param.post);
       Config.post[Param.post].pid.stdin.write(Config.target_frame_id+'\n');
@@ -240,13 +242,23 @@ setImmediate(async function(){
       try{
         let obj=await rosNode.getParam(namespace);
         Object.assign(Param,obj);
-        if(Config.post.hasOwnProperty(Param.post)){
+        if(typeof Config.post=="string"){
+          if(!Config.hasOwnProperty("post_proc")){
+            ros.log.info("r-socket launch postprocessor:"+Config.post);
+            Config.post_pid=await exec(Config.post);
+            Config.post_pid.stdout.on('data',(data)=>{
+              ros.log.info('r-socket postproc1:'+data);
+              if(data.startsWith("OK")||data.startsWith("NG")) emitter.emit('solve',true);
+            });
+          }
+        }
+        else if(Config.post.hasOwnProperty(Param.post)){
           let proc=Config.post[Param.post]
           if(!proc.hasOwnProperty("pid")){
             ros.log.info("r-socket launch postprocessor:"+proc.launch);
             proc.pid=await exec(proc.launch);
             proc.pid.stdout.on('data',(data)=>{
-              ros.log.info('r-socket postproc:'+data);
+              ros.log.info('r-socket postproc2:'+data);
               if(data.startsWith("OK")||data.startsWith("NG")) emitter.emit('solve',true);
             });
           }
