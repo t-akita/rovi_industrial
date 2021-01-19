@@ -25,13 +25,15 @@ let Config={
   target_frame_id:'solve0',
   update_frame_id:'',
   check_frame_id:'',
+  fitness:'fitness',
   post:{'revolve':{'launch':'rosrun rovi_industrial revolve.py'}},
   reverse_frame_id:'',
-  reverse_direction:1
+  reverse_direction:1,
 };
 let Param={
   post:''
 };
+let Score={'fitness':[0,0]};
 
 setImmediate(async function(){
   console.log("R-Socket "+process.argv.toString());
@@ -55,7 +57,9 @@ setImmediate(async function(){
   rosNode.subscribe('/response/solve',std_msgs.Bool,async function(ret){
     if(!ret.data) emitter.emit('solve',ret.data);
     else if(typeof Config.post=="string"){
-      Config.post_pid.stdin.write(Config.target_frame_id+'\n');
+      if(Config.hasOwnProperty('post_pid')){
+        Config.post_pid.stdin.write(Config.target_frame_id+'\n');
+      }
     }
     else if(Config.post.hasOwnProperty(Param.post)){
       console.log("postproc queue "+Param.post);
@@ -68,6 +72,10 @@ setImmediate(async function(){
   });
   rosNode.subscribe('/rsocket/enable',std_msgs.Bool,async function(ret){
     Xable=ret.data;
+  });
+  rosNode.subscribe('/report',std_msgs.String,function(msg){
+    let jss=msg.data.replace(/\)/g, ']').replace(/\(/g, '[').replace(/\'/g, '\"');
+    Object.assign(Score,JSON.parse(jss));
   });
   const pub_conn=rosNode.advertise('/rsocket/stat',std_msgs.Bool);
   const pub_tf=rosNode.advertise('/update/config_tf',geometry_msgs.TransformStamped);
@@ -243,7 +251,7 @@ setImmediate(async function(){
         let obj=await rosNode.getParam(namespace);
         Object.assign(Param,obj);
         if(typeof Config.post=="string"){
-          if(!Config.hasOwnProperty("post_proc")){
+          if(!Config.hasOwnProperty("post_pid")){
             ros.log.info("r-socket launch postprocessor:"+Config.post);
             Config.post_pid=await exec(Config.post);
             Config.post_pid.stdout.on('data',(data)=>{
@@ -265,6 +273,8 @@ setImmediate(async function(){
         }
       }
       catch(e){
+        console.log("Post processor exec error"+Config.post_pid);
+        if(Config.hasOwnProperty("post_pid")) delete Config.post_pid;
       }
 
       let f=new std_msgs.Bool();
@@ -288,7 +298,8 @@ setImmediate(async function(){
         }
         catch(err){ }
         if(!ret){
-          respNG(conn,protocol,922); //failed to solve
+          if(Score[Config['fitness']][1]!=0) respNG(conn,protocol,922); //failed to solve with fitness
+          else respNG(conn,protocol,923); //failed to solve except fitness
           return;
         }
         let req=new utils_srvs.TextFilter.Request();
@@ -312,7 +323,7 @@ setImmediate(async function(){
         let tf=JSON.parse(res.data);
         if(!tf.hasOwnProperty('translation')){
           ros.log.error('tf_lookup returned but Transform');
-          respNG(conn,protocol,925); //failed to lookup
+          respNG(conn,protocol,923); //failed to lookup
           return;
         }
         ros.log.info("rsocket tf:"+res.data);
