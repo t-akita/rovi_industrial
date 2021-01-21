@@ -40,7 +40,7 @@ def cb_update():
   bcz=bcz/np.linalg.norm(bcz)
   rot=np.cross(bsz,bcz)
   lrot=np.linalg.norm(rot)
-  arot=np.arcsin(lrot)
+  arot=np.arcsin(lrot)*0.5;
   if lrot>0:
     rot=rot/lrot*arot
   r=R.from_rotvec(rot)

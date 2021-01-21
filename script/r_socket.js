@@ -284,7 +284,7 @@ setImmediate(async function(){
         }
       }
       catch(e){
-        console.log("Post processor exec error"+Config.post);
+        console.log("Post processor exec error/Config: "+Config.post+"/Param: "+Param.post);
         if(Config.hasOwnProperty("post_pid")) delete Config.post_pid;
       }
       let f=new std_msgs.Bool();
