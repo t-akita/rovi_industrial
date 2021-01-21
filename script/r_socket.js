@@ -173,6 +173,14 @@ setImmediate(async function(){
     stmp.transform=tf;
     return stmp;
   }
+  function tf_update(tf,id){
+    let stmp=new geometry_msgs.TransformStamped();
+    stmp.header.stamp=ros.Time.now();
+    stmp.header.frame_id='';
+    stmp.child_frame_id=id;
+    stmp.transform=tf;
+    return stmp;
+  }
   let TX1;
   const server = net.createServer(function(conn){
     conn.setTimeout(Config.socket_timeout*1000);
@@ -206,6 +214,7 @@ setImmediate(async function(){
         let tf=tf_update(tfs[0],Config.update_frame_id);
         pub_tf.publish(tf);
       }
+
       setTimeout(function(){
         let f=new std_msgs.Bool();
         f.data=true;
@@ -278,7 +287,6 @@ setImmediate(async function(){
         console.log("Post processor exec error"+Config.post);
         if(Config.hasOwnProperty("post_pid")) delete Config.post_pid;
       }
-
       let f=new std_msgs.Bool();
       f.data=true;
       pub_solve.publish(f);
