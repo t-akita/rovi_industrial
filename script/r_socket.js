@@ -3,7 +3,7 @@
 let namespace='rsocket';
 const net=require('net')
 const EventEmitter=require('events').EventEmitter;
-const exec=require('child_process').exec;
+const spawn=require('child_process').spawn;
 const ros=require('rosnodejs');
 const geometry_msgs=ros.require('geometry_msgs').msg;
 const sensor_msgs=ros.require('sensor_msgs').msg;
@@ -36,9 +36,10 @@ let Param={
 let Score={'fitness':[0,0]};
 
 setImmediate(async function(){
-  console.log("R-Socket "+process.argv.toString());
+  console.log("r-socket start:"+namespace);
   const emitter=new EventEmitter();
   const rosNode=await ros.initNode(namespace);
+  console.log("r-socket registered:");
   try{
     let co=await rosNode.getParam('/config/'+namespace);
     Object.assign(Config,co);
@@ -57,13 +58,39 @@ setImmediate(async function(){
   rosNode.subscribe('/response/solve',std_msgs.Bool,async function(ret){
     if(!ret.data) emitter.emit('solve',ret.data);
     else if(typeof Config.post=="string"){
-      if(Config.hasOwnProperty('post_pid')){
-        Config.post_pid.stdin.write(Config.target_frame_id+'\n');
+      if(Config.hasOwnProperty('post_svc')){
+        let req=new utils_srvs.TextFilter.Request();
+        req.data='';
+        ros.log.info('post query:'+req.data);
+        let res;
+        try{
+          res=await Config.post_svc.call(req);
+        }
+        catch(err){
+          ros.log.error('post query error');
+          respNG(conn,protocol,924); 
+          return;
+        }
+        ros.log.info('post query done');
+        emitter.emit('solve',true);
       }
     }
     else if(Config.post.hasOwnProperty(Param.post)){
-      console.log("postproc queue "+Param.post);
-      Config.post[Param.post].pid.stdin.write(Config.target_frame_id+'\n');
+      let proc=Config.post[Param.post];
+      let req=new utils_srvs.TextFilter.Request();
+      req.data='';
+      ros.log.info('post call');
+      let res;
+      try{
+        res=await proc.svc.call(req);
+      }
+      catch(err){
+        ros.log.error('post call error');
+        respNG(conn,protocol,924);
+        return;
+      }
+      ros.log.info('post call done');
+      emitter.emit('solve',true);
     }
     else emitter.emit('solve',ret.data);
   });
@@ -83,7 +110,7 @@ setImmediate(async function(){
   const pub_capture=rosNode.advertise('/request/capture',std_msgs.Bool);
   const pub_solve=rosNode.advertise('/request/solve',std_msgs.Bool);
   const pub_recipe=rosNode.advertise('/request/recipe_load',std_msgs.String);
-  const pub_path=rosNode.advertise('/request/path',geometry_msgs.PoseArray);
+  const pub_report=rosNode.advertise('/report',std_msgs.String);
   rosNode.subscribe(namespace+'/ping',std_msgs.Bool,async function(ret){
     let res = await ping.promise.probe(Config.robot_ip,{timeout:3});
     if(res.alive){
@@ -92,7 +119,7 @@ setImmediate(async function(){
       pub_conn.publish(stat);
     }
   });
-  tf_lookup=rosNode.serviceClient('/tf_lookup/query', utils_srvs.TextFilter, { persist: true });
+  tf_lookup=rosNode.serviceClient('/tf_lookup/query', utils_srvs.TextFilter, { persist: false });
   if (!await rosNode.waitForService(tf_lookup.getService(), 2000)) {
     ros.log.error('tf_lookup service not available');
     return;
@@ -148,6 +175,9 @@ setImmediate(async function(){
     if(proto.autoclose) conn.destroy();
     conn.x012=false;
     stat_out(false);
+    let rep=new std_msgs.String();
+    rep.data=JSON.stringify({error:[err,1]});
+    pub_report.publish(rep);
   }
   function respOK(conn,proto,cod){
     switch(arguments.length){
@@ -164,14 +194,9 @@ setImmediate(async function(){
     if(proto.autoclose) conn.destroy();
     conn.x012=false;
     stat_out(false);
-  }
-  function tf_update(tf,id){
-    let stmp=new geometry_msgs.TransformStamped();
-    stmp.header.stamp=ros.Time.now();
-    stmp.header.frame_id='';
-    stmp.child_frame_id=id;
-    stmp.transform=tf;
-    return stmp;
+    let rep=new std_msgs.String();
+    rep.data=JSON.stringify({error:[0,0]});
+    pub_report.publish(rep);
   }
   function tf_update(tf,id){
     let stmp=new geometry_msgs.TransformStamped();
@@ -214,7 +239,6 @@ setImmediate(async function(){
         let tf=tf_update(tfs[0],Config.update_frame_id);
         pub_tf.publish(tf);
       }
-
       setTimeout(function(){
         let f=new std_msgs.Bool();
         f.data=true;
@@ -260,33 +284,40 @@ setImmediate(async function(){
         if(typeof Config.post=="string"){
           if(!Config.hasOwnProperty("post_pid")){
             ros.log.info("r-socket launch postprocessor:"+Config.post);
-            Config.post_pid=await exec(Config.post);
-            Config.post_pid.stdout.on('data',(data)=>{
-              ros.log.info('r-socket postproc1:'+data);
-              if(data.startsWith("OK")||data.startsWith("NG")) emitter.emit('solve',true);
-            });
+            let args=Config.post.split(' ');
+            let cmd=args.shift();
+            Config.post_pid=await spawn(cmd,args,{stdio:['inherit','inherit','inherit']});
+            Config.post_svc=rosNode.serviceClient('/post/query', utils_srvs.TextFilter, { persist: false });
+            if (!await rosNode.waitForService(Config.post_svc.getService(), 2000)) {
+              ros.log.error('post service not available');
+              return;
+            }
           }
         }
         else{
           let obj=await rosNode.getParam(namespace);
           Object.assign(Param,obj);
           if(Config.post.hasOwnProperty(Param.post)){
-            let proc=Config.post[Param.post]
+            let proc=Config.post[Param.post];
             if(!proc.hasOwnProperty("pid")){
               ros.log.info("r-socket launch postprocessor:"+proc.launch);
-              proc.pid=await exec(proc.launch);
-              proc.pid.stdout.on('data',(data)=>{
-                ros.log.info('r-socket postproc2:'+data);
-                if(data.startsWith("OK")||data.startsWith("NG")) emitter.emit('solve',true);
-              });
+              let args=proc.launch.split(' ');
+              let cmd=args.shift();
+              proc.pid=await spawn(cmd,args,{'stdio':['inherit','inherit','inherit']});
+              proc.svc=rosNode.serviceClient('/post/query', utils_srvs.TextFilter, { persist: false });
+              if (!await rosNode.waitForService(proc.svc.getService(), 2000)) {
+                ros.log.error('post service not available');
+                return;
+              }
             }
           }
         }
       }
       catch(e){
-        console.log("Post processor exec error/Config: "+Config.post+"/Param: "+Param.post);
+        console.log("Post processor exec error"+Config.post);
         if(Config.hasOwnProperty("post_pid")) delete Config.post_pid;
       }
+
       let f=new std_msgs.Bool();
       f.data=true;
       pub_solve.publish(f);

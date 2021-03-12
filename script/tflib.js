@@ -9,7 +9,7 @@ module.exports={
   connect:async function(n){
     const rosNode=this.node=n;
     if(this.tf_euler==null){
-      this.tf_euler=rosNode.serviceClient('/tf_euler/query', utils_srvs.TextFilter, { persist: true });
+      this.tf_euler=rosNode.serviceClient('/tf_euler/query', utils_srvs.TextFilter, { persist: false });
       if (!await rosNode.waitForService(this.tf_euler.getService(), 2000)) {
         this.tf_euler=null;
         ros.log.error('tf_euler service not available');
