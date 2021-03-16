@@ -16,7 +16,10 @@ rospy.init_node('marker_ycam', anonymous=False, log_level=rospy.INFO, disable_si
 
 # Define exit handler
 def cleanup_node():
-    print "Shutting down node"
+    # 2021/03/16 hato ------------------------------ start ------------------------------
+    # print "Shutting down node"
+    print("Shutting down node")
+    # 2021/03/16 hato ------------------------------  end  ------------------------------
     markers.deleteAllMarkers()
 
 rospy.on_shutdown(cleanup_node)
