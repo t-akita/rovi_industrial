@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# 2021/03/17 hato #!/usr/bin/env python -> !/usr/bin/env python3
 
 # Python includes
 import numpy
