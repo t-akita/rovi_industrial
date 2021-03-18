@@ -10,6 +10,7 @@ from std_msgs.msg import Bool
 from geometry_msgs.msg import Transform
 from geometry_msgs.msg import TransformStamped
 from rovi_utils import tflib
+from rovi_utils.srv import TextFilter,TextFilterRequest,TextFilterResponse
 from scipy.spatial.transform import Rotation as R
 
 def lookup(a,b):
@@ -23,7 +24,8 @@ def lookup(a,b):
     return None
   return aTb
 
-def cb_update():
+def cb_update(req):
+  res=TextFilterResponse()
   stj=lookup("camera/master0","camera/master0/journal")
   stj.header.frame_id="camera/capture0/solve0"
   stj.child_frame_id="camera/capture0/solve0/journal"
@@ -53,21 +55,17 @@ def cb_update():
   jtr.header.stamp=rospy.Time.now()
   jtr.transform=tflib.fromRT(jTr)
   broadcaster.sendTransform([stj,jtr])
-  return True
+  return res
 
 ########################################################
 rospy.init_node('revolver',anonymous=True)
 tfBuffer=tf2_ros.Buffer()
 listener=tf2_ros.TransformListener(tfBuffer)
 broadcaster=tf2_ros.StaticTransformBroadcaster()
-rospy.sleep(2)
+rospy.sleep(0.5)
 sys.stdout.write("//Start revolve.py\n")
 sys.stdout.flush()
 
-while not rospy.is_shutdown():
-  line=sys.stdin.readline()
-  sys.stdout.write("//Do revolve\n")
-  sys.stdout.flush()
-  cb_update()
-  sys.stdout.write("OK revolve.py\n")
-  sys.stdout.flush()
+s=rospy.Service('/post/query', TextFilter, cb_update)
+rospy.spin()
+
